@@ -11,7 +11,7 @@ import errno
 
 from sage.env import (
     SAGE_DOC, SAGE_LOCAL, SAGE_EXTCODE,
-    SAGE_VERSION
+    SAGE_VERSION, SAGE_BIN
 )
 
 
@@ -176,7 +176,7 @@ class SageKernelSpec(object):
              '{connection_file}']
         """
         return [
-            os.path.join(SAGE_LOCAL, 'bin', 'sage'),
+            os.path.join(SAGE_BIN, 'sage'),
             '--python',
             '-m', 'sage.repl.ipython_kernel',
             '-f', '{connection_file}',
