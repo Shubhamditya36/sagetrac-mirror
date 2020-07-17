@@ -177,6 +177,5 @@ code = setup(name = 'sage',
       cmdclass = dict(build=sage_build,
                       build_cython=sage_build_cython,
                       build_ext=sage_build_ext,
-                      #install=sage_install
-                      ),
+                      install=sage_install),
       ext_modules = cython_modules)
