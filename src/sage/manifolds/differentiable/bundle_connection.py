@@ -499,24 +499,8 @@ class BundleConnection(SageObject):
                     for i in vb.irange():
                         sec_nab = self(vframe[d], frame[i])
                         for j in vb.irange():
-                            omega(i, j, frame)[vframe, d] = sec_nab[frame, j]
+                            omega(i, j, frame)[vframe, d] = sec_nab[[frame, j]]
         return self._connection_forms[frame]
-
-    def _change_of_frame(self, frame1, frame2):
-        r"""
-
-        """
-        vb = self._vbundle
-        auto = vb.change_of_frame(frame1, frame2)
-        inv_auto = ~auto
-        for i in vb.irange():
-            for j in vb.irange():
-                a = sum(inv_auto[[i, k]] * auto[[k, j]].differential()
-                        for k in vb.irange())
-                b = sum(sum(inv_auto[[i, k]] * self[frame2, k, l]
-                            for k in vb.irange()) * auto[[l, j]]
-                        for l in vb.irange())  # two matrix multiplications
-                self[frame2, i, j] = a + b
 
     def connection_form(self, i, j, frame=None):
         r"""
@@ -553,6 +537,128 @@ class BundleConnection(SageObject):
 
         """
         return self.connection_forms(frame)[(i, j)]
+
+    def __call__(self, v, s):
+        r"""
+        Action of the connection on a vector field and local section.
+
+        INPUT:
+
+        - ``v`` -- a vector field `v` on the base space
+        - ``s`` -- a local section `s`
+
+        OUTPUT:
+
+        - local section `\nabla_v s`
+
+        TESTS::
+
+            sage: M = Manifold(2, 'M', start_index=1)
+            sage: X.<x,y> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e')
+            sage: nab = E.bundle_connection('nabla', latex_name=r'\nabla')
+            sage: nab[:] = 0
+            sage: nab[1,2][1] = x*y
+            sage: v = M.vector_field('v')
+            sage: v[:] = [-y, x]
+            sage: s = E.section('s')
+            sage: s[:] = [y, -x]
+            sage: nab.__call__(v, s)
+            Section nabla_v(s) on the 2-dimensional differentiable manifold M
+             with values in the real vector bundle E of rank 2
+
+        """
+        from sage.manifolds.section import TrivialSection
+        from sage.tensor.modules.format_utilities import format_unop_latex
+        if isinstance(s, TrivialSection):
+            return self._derive_trivial(v, s)
+        # Resulting section
+        vb = self._vbundle
+        dom = s.domain()
+        if s._name is None or v._name:
+            name_resu = None
+        else:
+            name_resu = self._name + '_' + v._name + '(' + s._name + ')'
+        if s._latex_name is None or v._latex_name is None:
+            latex_name_resu = None
+        else:
+            nab_v_latex = self._latex_name + '_{' + v._latex_name + '} '
+            latex_name_resu = format_unop_latex(nab_v_latex, s._latex_name)
+        resu = vb.section(domain=dom, name=name_resu,
+                          latex_name=latex_name_resu)
+        # gluing process
+        for dom, rst in s._restrictions.items():
+            # the computation is performed only if dom is not a subdomain
+            # of another restriction:
+            for odom in s._restrictions:
+                if dom in odom._subsets and dom is not odom:
+                    break
+            else:
+                # dom is not a subdomain and the computation is performed:
+                resu._restrictions[rst._domain] = self(rst)
+        return resu
+
+    def _derive_trivial(self, v, s):
+        r"""
+        Action of the connection on a local section whose module is free.
+
+        INPUT:
+
+        - ``v`` -- a vector field `v` on the base space
+        - ``s`` -- a local section `s` whose module is free
+
+        OUTPUT:
+
+        - local section `\nabla_v s`
+
+        TESTS::
+
+            sage: M = Manifold(2, 'M', start_index=1)
+            sage: X.<x,y> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e')
+            sage: nab = E.bundle_connection('nabla', latex_name=r'\nabla')
+            sage: nab[:] = 0
+            sage: nab[1,2][1] = x*y
+            sage: v = M.vector_field('v')
+            sage: v[:] = [-y, x]
+            sage: s = E.section('s')
+            sage: s[:] = [y, -x]
+            sage: nab._derive_trivial(v, s)
+            Section nabla_v(s) on the 2-dimensional differentiable manifold M
+             with values in the real vector bundle E of rank 2
+
+        """
+        vb = self._vbundle
+        dom = s.domain()
+        # pick the first frame whose forms of self on dom are known
+        for frame in self._connection_forms:
+            if dom.is_subset(frame.domain()):
+                frame = frame.restrict(dom)
+                break
+        else:
+            raise ValueError("no local frame found for the computation")
+        # Resulting section
+        from sage.tensor.modules.format_utilities import format_unop_latex
+        if s._name is None or v._name is None:
+            name_resu = None
+        else:
+            name_resu = self._name + '_' + v._name + '(' + s._name + ')'
+        if s._latex_name is None or v._latex_name is None:
+            latex_name_resu = None
+        else:
+            nab_v_latex = self._latex_name + '_{' + v._latex_name + '} '
+            latex_name_resu = format_unop_latex(nab_v_latex, s._latex_name)
+        res = vb.section(domain=dom, name=name_resu,
+                         latex_name=latex_name_resu)
+        for j in vb.irange():
+            s_comp = s[[frame, j]]
+            ds_comp = s_comp.differential()
+            res_comp = ds_comp(v)
+            res_comp += sum(s_comp * self[frame, i, j](v) for i in vb.irange())
+            res[frame, j] = res_comp
+        return res
 
     def add_connection_form(self, i, j, frame=None):
         r"""
@@ -700,7 +806,8 @@ class BundleConnection(SageObject):
             sage: nab[e, 0, 1].display()
             Traceback (most recent call last):
             ...
-            KeyError: Local frame (E|_M, (e_0,e_1))
+            ValueError: no basis could be found for computing the components in
+             the Local frame (E|_M, (f_0,f_1))
 
         To keep them, use the method :meth:`add_connection_form` instead.
 
@@ -752,7 +859,8 @@ class BundleConnection(SageObject):
             sage: nab[f, :]
             Traceback (most recent call last):
             ...
-            KeyError: Local frame (E|_M, (f_1,f_2))
+            ValueError: no basis could be found for computing the components in
+             the Local frame (E|_M, (e_1,e_2))
 
         """
         if frame is None:
