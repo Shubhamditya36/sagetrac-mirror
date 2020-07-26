@@ -490,9 +490,33 @@ class BundleConnection(SageObject):
                         comp_store[ind] = value.restrict(frame._domain)
                     break
             else:
-                # TODO: Compute coefficients out of known ones
-                pass
+                # If not, the forms must be computed from scratch:
+                vb = self._vbundle
+                dom = frame.domain()
+                vframe = dom.default_frame()
+                omega = self.set_connection_form
+                for d in dom.irange():
+                    for i in vb.irange():
+                        sec_nab = self(vframe[d], frame[i])
+                        for j in vb.irange():
+                            omega(i, j, frame)[vframe, d] = sec_nab[frame, j]
         return self._connection_forms[frame]
+
+    def _change_of_frame(self, frame1, frame2):
+        r"""
+
+        """
+        vb = self._vbundle
+        auto = vb.change_of_frame(frame1, frame2)
+        inv_auto = ~auto
+        for i in vb.irange():
+            for j in vb.irange():
+                a = sum(inv_auto[[i, k]] * auto[[k, j]].differential()
+                        for k in vb.irange())
+                b = sum(sum(inv_auto[[i, k]] * self[frame2, k, l]
+                            for k in vb.irange()) * auto[[l, j]]
+                        for l in vb.irange())  # two matrix multiplications
+                self[frame2, i, j] = a + b
 
     def connection_form(self, i, j, frame=None):
         r"""
