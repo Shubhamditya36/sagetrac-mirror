@@ -136,7 +136,7 @@ class BundleConnection(SageObject):
         the connection 1-forms w.r.t. other frames for consistency reasons. To
         avoid this behavior, :meth:`add_connection_form` must be used instead.
 
-    The bundle connection action certainly obeys the structure formulas for
+    The bundle connection action certainly obeys the defining formula for
     the connection 1-forms::
 
         sage: vframe = X.frame()
@@ -160,7 +160,7 @@ class BundleConnection(SageObject):
          connection (2,2) of bundle connection nabla w.r.t. Local frame
           (E|_M, (f_1,f_2)) = -x*z dx - y*z dy - z^2 dz
 
-    The new connection 1-forms obey the structure formula, too::
+    The new connection 1-forms obey the defining formula, too::
 
         sage: all(nab(vframe[k], f[i]) == sum(nab[f, i, j](vframe[k])*f[j]
         ....:                                 for j in E.irange())
