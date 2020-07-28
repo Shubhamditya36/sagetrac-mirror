@@ -2365,6 +2365,8 @@ class FreeModuleTensor(ModuleElement):
                 raise ValueError("no common basis for the components")
             omega = self._components[basis]
             vv = vector._components[basis]
+            if omega == 0 or vv == 0:
+                return self.base_ring().zero()
             resu = 0
             for i in fmodule.irange():
                 resu += omega[[i]]*vv[[i]]
