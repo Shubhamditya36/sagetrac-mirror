@@ -136,18 +136,36 @@ class BundleConnection(SageObject):
         the connection 1-forms w.r.t. other frames for consistency reasons. To
         avoid this behavior, :meth:`add_connection_form` must be used instead.
 
-    A bundle connection acts on a pair `(v, s)`, where `v` is a vector
+    The bundle connection action certainly obeys the structure formulas for
+    the connection 1-forms::
 
-        sage: vframe = X.vector_frame()
-        sage: all(nab(v, e))
+        sage: vframe = X.frame()
+        sage: all(nab(vframe[k], e[i]) == sum(nab[e, i, j](vframe[k])*e[j]
+        ....:                                 for j in E.irange())
+        ....:     for i in E.irange() for k in M.irange())
+        True
 
-    Let us define another frame on the vector bundle::
+    The connection 1-forms are computed automatically for different frames::
 
         sage: f = E.local_frame('f', ((1+x^2)*e[1], e[1]-e[2]))
-        sage: nab.connection_forms(frame=f)
-
         sage: nab.display(frame=f)
+        connection (1,1) of bundle connection nabla w.r.t. Local frame
+         (E|_M, (f_1,f_2)) = ((x^3 + x)*z + 2*x)/(x^2 + 1) dx + y*z dy + z^2 dz
+         connection (1,2) of bundle connection nabla w.r.t. Local frame
+          (E|_M, (f_1,f_2)) = -(x^3 + x)*z dx - (x^2 + 1)*y*z dy -
+          (x^2 + 1)*z^2 dz
+         connection (2,1) of bundle connection nabla w.r.t. Local frame
+          (E|_M, (f_1,f_2)) = (x*z - x)/(x^2 + 1) dx -
+          (x^2 - y*z)/(x^2 + 1) dy - (x^3 - z^2)/(x^2 + 1) dz
+         connection (2,2) of bundle connection nabla w.r.t. Local frame
+          (E|_M, (f_1,f_2)) = -x*z dx - y*z dy - z^2 dz
 
+    The new connection 1-forms obey the structure formula, too::
+
+        sage: all(nab(vframe[k], f[i]) == sum(nab[f, i, j](vframe[k])*f[j]
+        ....:                                 for j in E.irange())
+        ....:     for i in E.irange() for k in M.irange())
+        True
 
     After the connection has been specified, the curvature 2-forms can be
     derived::
@@ -670,12 +688,12 @@ class BundleConnection(SageObject):
             latex_name_resu = format_unop_latex(nab_v_latex, s._latex_name)
         res = vb.section(domain=dom, name=name_resu,
                          latex_name=latex_name_resu)
-        for i in vb.irange():
-            s_comp = s[[frame, i]]
-            ds_comp = s_comp.differential()
+        for j in vb.irange():
+            ds_comp = s[[frame, j]].differential()
             res_comp = ds_comp(v)
-            res_comp += sum(s_comp * self[frame, i, j](v) for j in vb.irange())
-            res[frame, i] = res_comp
+            res_comp += sum(s[[frame, i]] * self[frame, i, j](v)
+                            for i in vb.irange())
+            res[frame, j] = res_comp
         return res
 
     def add_connection_form(self, i, j, form=None, frame=None):
