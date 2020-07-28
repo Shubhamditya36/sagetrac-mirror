@@ -1213,6 +1213,86 @@ class BundleConnection(SageObject):
     def display(self, frame=None, vector_frame=None, chart=None,
                 only_nonzero=True):
         r"""
+        Display all the connection 1-forms w.r.t. to a given local frame, one
+        per line.
+
+        The output is either text-formatted (console mode) or LaTeX-formatted
+        (notebook mode).
+
+        INPUT:
+
+        - ``frame`` -- (default: ``None``) local frame of the vector bundle
+          relative to which the connection 1-forms are defined; if ``None``,
+          the default frame of the bundle is used
+        - ``vector_frame`` -- (default: ``None``) vector frame of the manifold
+          relative to which the connection 1-forms should be displayed; if
+          ``None``, the default frame of the local frame's domain is used
+        - ``chart`` -- (default: ``None``) chart specifying the coordinate
+          expression of the connection 1-forms; if ``None``,
+          the default chart of the domain of ``frame`` is used
+        - ``only_nonzero`` -- (default: ``True``) boolean; if ``True``, only
+          nonzero connection coefficients are displayed
+
+        EXAMPLES:
+
+        Set connection 1-forms::
+
+            sage: M = Manifold(3, 'M', start_index=1)
+            sage: X.<x,y,z> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e') # standard frame for E
+            sage: nab = E.bundle_connection('nabla', latex_name=r'\nabla'); nab
+            Bundle connection nabla on the Differentiable real vector bundle
+             E -> M of rank 2 over the base space 3-dimensional differentiable
+             manifold M
+            sage: nab[:] = 0
+            sage: nab[1, 1][:] = [x, y, z]
+            sage: nab[2, 2][:] = [x^2, y^2, z^2]
+
+        By default, only the nonzero connection coefficients are displayed::
+
+            sage: nab.display()
+            connection (1,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x dx + y dy + z dz
+             connection (2,2) of bundle connection nabla w.r.t. Local frame
+              (E|_M, (e_1,e_2)) = x^2 dx + y^2 dy + z^2 dz
+            sage: latex(nab.display())
+            \begin{array}{lcl} \omega^1_{\ \, 1} = x \mathrm{d} x +
+             y \mathrm{d} y + z \mathrm{d} z \\ \omega^2_{\ \, 2} = x^{2}
+             \mathrm{d} x + y^{2} \mathrm{d} y + z^{2} \mathrm{d} z \end{array}
+
+        By default, the displayed connection 1-forms are those w.r.t.
+        the default frame of the vector bundle. The aforementioned is
+        therefore equivalent to::
+
+            sage: nab.display(frame=E.default_frame())
+            connection (1,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x dx + y dy + z dz
+            connection (2,2) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x^2 dx + y^2 dy + z^2 dz
+
+        Moreover, the connection 1-forms are displayed w.r.t. the default
+        vector frame on the local frame's domain, i.e.::
+
+            sage: domain = e.domain()
+            sage: nab.display(vector_frame=domain.default_frame())
+            connection (1,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x dx + y dy + z dz
+            connection (2,2) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x^2 dx + y^2 dy + z^2 dz
+
+        By default, the parameter ``only_nonzero`` is set to ``True``.
+        Otherwise, the connection 1-forms being zero are shown as well::
+
+            sage: nab.display(only_nonzero=False)
+            connection (1,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x dx + y dy + z dz
+            connection (1,2) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = 0
+            connection (2,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = 0
+            connection (2,2) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x^2 dx + y^2 dy + z^2 dz
 
         """
         vb = self._vbundle
@@ -1240,10 +1320,11 @@ class BundleConnection(SageObject):
         for i in vb.irange():
             for j in vb.irange():
                 omega = self[frame, i, j]
-                if only_nonzero and (omega != 0):
-                    omega_out = omega.display(vector_frame, chart)
-                    rlatex += latex(omega_out) + r' \\'
-                    rtxt += str(omega_out) + ' \n'
+                if only_nonzero and (omega == 0):
+                    continue
+                omega_out = omega.display(vector_frame, chart)
+                rlatex += latex(omega_out) + r' \\'
+                rtxt += str(omega_out) + ' \n'
         rtxt = rtxt[:-1]  # remove the last new line
         rlatex = rlatex[:-2] + r'\end{array}'
         return FormattedExpansion(rtxt, rlatex)
