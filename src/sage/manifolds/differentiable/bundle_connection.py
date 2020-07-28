@@ -68,7 +68,7 @@ class BundleConnection(SageObject):
         sage: X.<x,y,z> = M.chart()
         sage: E = M.vector_bundle(2, 'E')
         sage: e = E.local_frame('e') # standard frame for E
-        sage: nab = E.bundle_connection('nabla', latex_name=r'\nabla'); nab
+        sage: nab = E.bundle_connection('nabla'); nab
         Bundle connection nabla on the Differentiable real vector bundle E -> M
          of rank 2 over the base space 3-dimensional differentiable manifold M
 
@@ -81,25 +81,27 @@ class BundleConnection(SageObject):
 
         sage: nab[e, :] = 0  # initialize to zero
 
-    Now, we want to specify some non-zero entries::
+    The connection 1-forms are now initialized being differential 1-forms::
 
-        sage: nab[e, 1, 2] = [x*z, y*z, z^2]
-        sage: nab[e, 2, 1] = [x, x^2, x^3]
-        sage: nab[e, 1, 2].display()
-        connection (1,2) of bundle connection nabla w.r.t. Local frame
-         (E|_M, (e_1,e_2)) = x*z dx + y*z dy + z^2 dz
-        sage: nab[e, 2, 1].display()
-        connection (2,1) of bundle connection nabla w.r.t. Local frame
-         (E|_M, (e_1,e_2)) = x dx + x^2 dy + x^3 dz
-
-    The other entries remain zero::
-
+        sage: nab[e, 1, 1].parent()
+        Free module Omega^1(M) of 1-forms on the 3-dimensional differentiable
+         manifold M
         sage: nab[e, 1, 1].display()
         connection (1,1) of bundle connection nabla w.r.t. Local frame
          (E|_M, (e_1,e_2)) = 0
-        sage: nab[e, 2, 2].display()
-        connection (2,2) of bundle connection nabla w.r.t. Local frame
-         (E|_M, (e_1,e_2)) = 0
+
+    Now, we want to specify some non-zero entries::
+
+        sage: nab[e, 1, 2][:] = [x*z, y*z, z^2]
+        sage: nab[e, 2, 1][:] = [x, x^2, x^3]
+        sage: nab[e, 1, 1][:] = [x+z, y-z, x*y*z]
+        sage: nab.display()
+        connection (1,1) of bundle connection nabla w.r.t. Local frame
+          (E|_M, (e_1,e_2)) = (x + z) dx + (y - z) dy + x*y*z dz
+         connection (1,2) of bundle connection nabla w.r.t. Local frame
+          (E|_M, (e_1,e_2)) = x*z dx + y*z dy + z^2 dz
+         connection (2,1) of bundle connection nabla w.r.t. Local frame
+          (E|_M, (e_1,e_2)) = x dx + x^2 dy + x^3 dz
 
     Notice, when we omit the frame, the default frame of the vector bundle is
     assumed (in this case ``e``)::
@@ -110,7 +112,7 @@ class BundleConnection(SageObject):
 
     The same holds for the assignment::
 
-        sage: nab[:] = 0
+        sage: nab[1, 2] = 0
         sage: nab[e, 1, 2].display()
         connection (1,2) of bundle connection nabla w.r.t. Local frame
          (E|_M, (e_1,e_2)) = 0
@@ -133,6 +135,19 @@ class BundleConnection(SageObject):
         Notice that list assignments and :meth:`set_connection_form` delete
         the connection 1-forms w.r.t. other frames for consistency reasons. To
         avoid this behavior, :meth:`add_connection_form` must be used instead.
+
+    A bundle connection acts on a pair `(v, s)`, where `v` is a vector
+
+        sage: vframe = X.vector_frame()
+        sage: all(nab(v, e))
+
+    Let us define another frame on the vector bundle::
+
+        sage: f = E.local_frame('f', ((1+x^2)*e[1], e[1]-e[2]))
+        sage: nab.connection_forms(frame=f)
+
+        sage: nab.display(frame=f)
+
 
     After the connection has been specified, the curvature 2-forms can be
     derived::
@@ -494,12 +509,15 @@ class BundleConnection(SageObject):
                 vb = self._vbundle
                 dom = frame.domain()
                 vframe = dom.default_frame()
-                omega = self.set_connection_form
+                # it is important to use _new_forms instead of
+                # self.set_connection_form:
+                omega = self._new_forms(frame)
                 for d in dom.irange():
                     for i in vb.irange():
                         sec_nab = self(vframe[d], frame[i])
                         for j in vb.irange():
-                            omega(i, j, frame)[vframe, d] = sec_nab[[frame, j]]
+                            omega[(i, j)][vframe, d] = sec_nab[[frame, j]]
+                self._connection_forms[frame] = omega
         return self._connection_forms[frame]
 
     def connection_form(self, i, j, frame=None):
@@ -652,12 +670,12 @@ class BundleConnection(SageObject):
             latex_name_resu = format_unop_latex(nab_v_latex, s._latex_name)
         res = vb.section(domain=dom, name=name_resu,
                          latex_name=latex_name_resu)
-        for j in vb.irange():
-            s_comp = s[[frame, j]]
+        for i in vb.irange():
+            s_comp = s[[frame, i]]
             ds_comp = s_comp.differential()
             res_comp = ds_comp(v)
-            res_comp += sum(s_comp * self[frame, i, j](v) for i in vb.irange())
-            res[frame, j] = res_comp
+            res_comp += sum(s_comp * self[frame, i, j](v) for j in vb.irange())
+            res[frame, i] = res_comp
         return res
 
     def add_connection_form(self, i, j, form=None, frame=None):
@@ -825,7 +843,7 @@ class BundleConnection(SageObject):
             msg = "the input 'form' is outdated and will be removed in a "
             msg += "future version of Sage"
             deprecation(30208, msg)
-        omega = self.add_connection_form(i, j, form=None, frame=frame)
+        omega = self.add_connection_form(i, j, form=form, frame=frame)
         self.del_other_forms(frame)
         return omega
 
@@ -1166,9 +1184,41 @@ class BundleConnection(SageObject):
             else:
                 raise NotImplementedError("[start:stop] syntax not "
                                           "implemented")
-            
-    def display(self, frame=None, vector_frame=None, chart=None, symbol=None,
-                latex_symbol=None, only_nonzero=True):
+
+    def display(self, frame=None, vector_frame=None, chart=None,
+                only_nonzero=True):
         r"""
 
         """
+        vb = self._vbundle
+        if frame is None:
+            smodule = vb.section_module(domain=self._base_space)
+            frame = smodule.default_frame()
+            if frame is None:
+                raise ValueError("a local frame must be provided!")
+        dom = frame.domain()
+        if frame is None:
+            vmodule = dom.vector_field_module()
+            vector_frame = vmodule.default_frame()
+            if vector_frame is None:
+                raise ValueError("a vector frame must be provided!")
+        if chart is None:
+            chart = dom.default_chart()
+            if chart is None:
+                raise ValueError("a chart must be provided!")
+        # create output:
+        from sage.misc.latex import latex
+        from sage.tensor.modules.format_utilities import FormattedExpansion
+
+        rlatex = r'\begin{array}{lcl}'
+        rtxt = ''
+        for i in vb.irange():
+            for j in vb.irange():
+                omega = self[frame, i, j]
+                if only_nonzero and (omega != 0):
+                    omega_out = omega.display(vector_frame, chart)
+                    rlatex += latex(omega_out) + r' \\'
+                    rtxt += str(omega_out) + ' \n'
+        rtxt = rtxt[:-1]  # remove the last new line
+        rlatex = rlatex[:-2] + r'\end{array}'
+        return FormattedExpansion(rtxt, rlatex)
