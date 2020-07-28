@@ -350,7 +350,7 @@ class BundleConnection(SageObject):
 
         TESTS::
 
-             sage: M = Manifold(2, 'M')
+            sage: M = Manifold(2, 'M')
             sage: X.<x,y> = M.chart()
             sage: E = M.vector_bundle(2, 'E')
             sage: e = E.local_frame('e')  # standard frame for E
@@ -412,7 +412,7 @@ class BundleConnection(SageObject):
             dict of forms
 
         """
-        dom = frame._domain
+        dom = frame.domain()
         forms_dict = {}
         for i in self._vbundle.irange():
             for j in self._vbundle.irange():
@@ -487,7 +487,7 @@ class BundleConnection(SageObject):
                     comp_store = self._connection_forms[frame]
                     ocomp_store = self._connection_forms[oframe]
                     for ind, value in ocomp_store.items():
-                        comp_store[ind] = value.restrict(frame._domain)
+                        comp_store[ind] = value.restrict(frame.domain())
                     break
             else:
                 # If not, the forms must be computed from scratch:
@@ -660,7 +660,7 @@ class BundleConnection(SageObject):
             res[frame, j] = res_comp
         return res
 
-    def add_connection_form(self, i, j, frame=None):
+    def add_connection_form(self, i, j, form=None, frame=None):
         r"""
         Return the connection form `\omega^j_i` in a given frame for
         assignment.
@@ -741,9 +741,16 @@ class BundleConnection(SageObject):
                                  " a frame on the {}".format(self._base_space))
             self._connection_forms[frame] = self._new_forms(frame)
         self._del_derived()  # deletes the derived quantities
+        if form:
+            # TODO: Remove input `form` in Sage 9.3
+            from sage.misc.superseded import deprecation
+            msg = "the input 'form' is outdated and will be removed in a "
+            msg += "future version of Sage"
+            deprecation(30208, msg)
+            self._connection_forms[frame][(i, j)] = form.copy()
         return self._connection_forms[frame][(i, j)]
 
-    def set_connection_form(self, i, j, frame=None):
+    def set_connection_form(self, i, j, form=None, frame=None):
         r"""
         Return the connection form `\omega^j_i` in a given frame for
         assignment.
@@ -812,7 +819,13 @@ class BundleConnection(SageObject):
         To keep them, use the method :meth:`add_connection_form` instead.
 
         """
-        omega = self.add_connection_form(i, j, frame=frame)
+        if form:
+            # TODO: Remove input `form` in Sage 9.3
+            from sage.misc.superseded import deprecation
+            msg = "the input 'form' is outdated and will be removed in a "
+            msg += "future version of Sage"
+            deprecation(30208, msg)
+        omega = self.add_connection_form(i, j, form=None, frame=frame)
         self.del_other_forms(frame)
         return omega
 
@@ -1138,7 +1151,7 @@ class BundleConnection(SageObject):
                                     "of value must contain lists/tuples")
                 else:
                     # check lenghts:
-                    rk = vb._rank
+                    rk = vb.rank()
                     if len(value) != rk:
                         raise ValueError("value must have "
                                          "length {}".format(rk))
@@ -1153,3 +1166,9 @@ class BundleConnection(SageObject):
             else:
                 raise NotImplementedError("[start:stop] syntax not "
                                           "implemented")
+            
+    def display(self, frame=None, vector_frame=None, chart=None, symbol=None,
+                latex_symbol=None, only_nonzero=True):
+        r"""
+
+        """
