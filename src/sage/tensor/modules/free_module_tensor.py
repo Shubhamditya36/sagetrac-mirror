@@ -2368,7 +2368,8 @@ class FreeModuleTensor(ModuleElement):
             resu = 0
             for i in fmodule.irange():
                 resu += omega[[i]]*vv[[i]]
-            if resu is not resu.parent().zero():
+            parent = resu.parent()
+            if resu is not parent.zero() and resu is not parent.one():
                 # Name and LaTeX symbol of the output:
                 if hasattr(resu, '_name'):
                     if self._name is not None and vector._name is not None:
