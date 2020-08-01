@@ -2372,6 +2372,8 @@ class FreeModuleTensor(ModuleElementWithMutability):
             try:
                 # Name and LaTeX symbol of the output:
                 if resu._name is None:
+                    resu_name = None
+                    resu_latex_name = None
                     if self._name is not None and vector._name is not None:
                         resu_name = self._name + "(" + vector._name + ")"
                     if self._latex_name is not None and \
