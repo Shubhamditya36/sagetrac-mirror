@@ -136,6 +136,19 @@ class BundleConnection(SageObject):
         the connection 1-forms w.r.t. other frames for consistency reasons. To
         avoid this behavior, :meth:`add_connection_form` must be used instead.
 
+    By definition, a bundle connection acts on vector fields and sections::
+
+        sage: v = M.vector_field((x^2,y^2,z^2), name='v'); v.display()
+        v = x^2 d/dx + y^2 d/dy + z^2 d/dz
+        sage: s = E.section((x-y^2, -z), name='s'); s.display()
+        s = (-y^2 + x) e_1 - z e_2
+        sage: nab_vs = nab(v, s); nab_vs
+        Section nabla_v(s) on the 3-dimensional differentiable manifold M with
+         values in the real vector bundle E of rank 2
+        sage: nab_vs.display()
+        nabla_v(s) = (-x^3*z^3 - 2*y^3 + x^2 - (x^2*y^2 + x^3)*z) e_1 +
+         (-(y^2 - x)*z^4 - (x^3*y^2 + y^5 - x^4 - x*y^3)*z - z^2) e_2
+
     The bundle connection action certainly obeys the defining formula for
     the connection 1-forms::
 
