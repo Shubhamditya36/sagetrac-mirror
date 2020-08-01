@@ -195,7 +195,7 @@ tensor ``t`` acts on pairs formed by a linear form and a module element::
 from __future__ import absolute_import
 
 from sage.rings.integer import Integer
-from sage.structure.element import ModuleElement
+from sage.structure.element import ModuleElementWithMutability
 from sage.tensor.modules.comp import (Components, CompWithSym, CompFullySym,
                                       CompFullyAntiSym)
 from sage.tensor.modules.tensor_with_indices import TensorWithIndices
@@ -206,7 +206,7 @@ from sage.manifolds.chart import Chart
 # TODO: remove the import of Chart after _preparse_display has been redefined
 # in tensor fields
 
-class FreeModuleTensor(ModuleElement):
+class FreeModuleTensor(ModuleElementWithMutability):
     r"""
     Tensor over a free module of finite rank over a commutative ring.
 
@@ -281,7 +281,7 @@ class FreeModuleTensor(ModuleElement):
         """
         if parent is None:
             parent = fmodule.tensor_module(*tensor_type)
-        ModuleElement.__init__(self, parent)
+        super().__init__(parent)
         self._fmodule = fmodule
         self._tensor_type = tuple(tensor_type)
         self._tensor_rank = self._tensor_type[0] + self._tensor_type[1]
@@ -1319,17 +1319,17 @@ class FreeModuleTensor(ModuleElement):
             [Basis (e_0,e_1,e_2) on the Rank-3 free module M over the Integer Ring,
              Basis (f_0,f_1,f_2) on the Rank-3 free module M over the Integer Ring]
 
-        Since zero is a special element, its components cannot be changed::
+        Since zero is an immutable element, its components cannot be changed::
 
             sage: z = M.tensor_module(1, 1).zero()
             sage: z.set_comp(e)[0,1] = 1
             Traceback (most recent call last):
             ...
-            AssertionError: the components of the zero element cannot be changed
+            AssertionError: the components of an immutable element cannot be changed
 
         """
-        if self is self.parent().zero():
-            raise AssertionError("the components of the zero element "
+        if self.is_immutable():
+            raise AssertionError("the components of an immutable element "
                                  "cannot be changed")
         self._is_zero = False  # a priori
         return self._set_comp_unsafe(basis)
@@ -1456,17 +1456,17 @@ class FreeModuleTensor(ModuleElement):
             sage: t.display(e)
             t = -3 e_0*e^1 + 2 e_1*e^2
 
-        Since zero is a special element, its components cannot be changed::
+        Since zero is an immutable element, its components cannot be changed::
 
             sage: z = M.tensor_module(1, 1).zero()
             sage: z.add_comp(e)[0,1] = 1
             Traceback (most recent call last):
             ...
-            AssertionError: the components of the zero element cannot be changed
+            AssertionError: the components of an immutable element cannot be changed
 
         """
-        if self is self.parent().zero():
-            raise AssertionError("the components of the zero element "
+        if self.is_immutable():
+            raise AssertionError("the components of an immutable element "
                                  "cannot be changed")
         self._is_zero = False  # a priori
         return self._add_comp_unsafe(basis)
@@ -1507,7 +1507,8 @@ class FreeModuleTensor(ModuleElement):
             [Basis (e_1,e_2,e_3) on the Rank-3 free module M over the Integer Ring]
 
         """
-        if basis is None: basis = self._fmodule._def_basis
+        if basis is None:
+            basis = self._fmodule._def_basis
         if basis not in self._components:
             raise ValueError("the components w.r.t. the {}".format(basis) +
                              " have not been defined")
@@ -2365,20 +2366,23 @@ class FreeModuleTensor(ModuleElement):
                 raise ValueError("no common basis for the components")
             omega = self._components[basis]
             vv = vector._components[basis]
-            if omega == 0 or vv == 0:
-                return self.base_ring().zero()
             resu = 0
             for i in fmodule.irange():
                 resu += omega[[i]]*vv[[i]]
-            # Name and LaTeX symbol of the output:
-            if hasattr(resu, '_name'):
-                if self._name is not None and vector._name is not None:
-                    resu._name = self._name + "(" + vector._name + ")"
-            if hasattr(resu, '_latex_name'):
-                if self._latex_name is not None and \
-                                                vector._latex_name is not None:
-                    resu._latex_name = self._latex_name + r"\left(" + \
-                                       vector._latex_name + r"\right)"
+            try:
+                # Name and LaTeX symbol of the output:
+                if resu._name is None:
+                    resu_name = None
+                    resu_latex_name = None
+                    if self._name is not None and vector._name is not None:
+                        resu_name = self._name + "(" + vector._name + ")"
+                    if self._latex_name is not None and \
+                            vector._latex_name is not None:
+                        resu_latex_name = self._latex_name + r"\left("
+                        resu_latex_name += vector._latex_name + r"\right)"
+                    resu.set_name(name=resu_name, latex_name=resu_latex_name)
+            except (AttributeError, AssertionError):
+                pass
             return resu
         #
         # Generic case
@@ -2426,40 +2430,41 @@ class FreeModuleTensor(ModuleElement):
             for i in range(p):
                 prod *= v[i][[ind[i]]]
             res += prod
-        # Name of the output:
-        if hasattr(res, '_name'):
-            res_name = None
-            if self._name is not None:
-                res_name = self._name + "("
-                for i in range(p-1):
-                    if args[i]._name is not None:
-                        res_name += args[i]._name + ","
-                    else:
-                        res_name = None
-                        break
-                if res_name is not None:
-                    if args[p-1]._name is not None:
-                        res_name += args[p-1]._name + ")"
-                    else:
-                        res_name = None
-            res._name = res_name
-        # LaTeX symbol of the output:
-        if hasattr(res, '_latex_name'):
-            res_latex = None
-            if self._latex_name is not None:
-                res_latex = self._latex_name + r"\left("
-                for i in range(p-1):
-                    if args[i]._latex_name is not None:
-                        res_latex += args[i]._latex_name + ","
-                    else:
-                        res_latex = None
-                        break
-                if res_latex is not None:
-                    if args[p-1]._latex_name is not None:
-                        res_latex += args[p-1]._latex_name + r"\right)"
-                    else:
-                        res_latex = None
-            res._latex_name = res_latex
+        if res is not res.parent().zero():
+            # Name of the output:
+            if hasattr(res, '_name'):
+                res_name = None
+                if self._name is not None:
+                    res_name = self._name + "("
+                    for i in range(p-1):
+                        if args[i]._name is not None:
+                            res_name += args[i]._name + ","
+                        else:
+                            res_name = None
+                            break
+                    if res_name is not None:
+                        if args[p-1]._name is not None:
+                            res_name += args[p-1]._name + ")"
+                        else:
+                            res_name = None
+                res._name = res_name
+            # LaTeX symbol of the output:
+            if hasattr(res, '_latex_name'):
+                res_latex = None
+                if self._latex_name is not None:
+                    res_latex = self._latex_name + r"\left("
+                    for i in range(p-1):
+                        if args[i]._latex_name is not None:
+                            res_latex += args[i]._latex_name + ","
+                        else:
+                            res_latex = None
+                            break
+                    if res_latex is not None:
+                        if args[p-1]._latex_name is not None:
+                            res_latex += args[p-1]._latex_name + r"\right)"
+                        else:
+                            res_latex = None
+                res._latex_name = res_latex
         return res
 
     def trace(self, pos1=0, pos2=1):
