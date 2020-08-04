@@ -2381,8 +2381,9 @@ class FreeModuleTensor(ModuleElementWithMutability):
                         resu_latex_name = self._latex_name + r"\left("
                         resu_latex_name += vector._latex_name + r"\right)"
                     resu.set_name(name=resu_name, latex_name=resu_latex_name)
-            finally:
-                return resu
+            except (AttributeError, AssertionError):
+                pass
+            return resu
         #
         # Generic case
         #
@@ -2461,8 +2462,9 @@ class FreeModuleTensor(ModuleElementWithMutability):
                     else:
                         res_latex = None
             res.set_name(name=res_name, latex_name=res_latex)
-        finally:
-            return res
+        except (AttributeError, AssertionError):
+            pass
+        return res
 
     def trace(self, pos1=0, pos2=1):
         r"""
