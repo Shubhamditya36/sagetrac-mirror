@@ -132,11 +132,35 @@ class BundleConnection(SageObject):
 
     .. NOTE::
 
-        Notice that list assignments and :meth:`set_connection_form` delete
-        the connection 1-forms w.r.t. other frames for consistency reasons. To
-        avoid this behavior, :meth:`add_connection_form` must be used instead.
+        Notice that assignments with the `[:]` syntax and
+        :meth:`set_connection_form` delete the connection 1-forms w.r.t.
+        other frames for consistency reasons. To avoid this behavior,
+        :meth:`add_connection_form` must be used instead.
 
-    By definition, a bundle connection acts on vector fields and sections::
+    Assigning the connection 1-forms via `nab[...] = ...` means copying the
+    differential form and is therefore equivalent to::
+
+        sage: zero = M.diff_form_module(1).zero()
+        sage: nab[2, 2].copy_from(zero)
+
+    It means that `nab[2, 2]` and `zero` are distinct instances::
+
+        sage: nab[2, 2] == zero
+        True
+        sage: nab[2 ,2] is zero
+        False
+
+    In conclusion, the connection 1-forms of a bundle connection are mutable
+    until the connection itself is set immutable::
+
+        sage: nab.set_immutable()
+        sage: nab[1, 2] = zero
+        Traceback (most recent call last):
+        ...
+        AssertionError: the coefficients of an immutable element cannot be
+         changed
+
+    By definition, bundle connections act on vector fields and sections::
 
         sage: v = M.vector_field((x^2,y^2,z^2), name='v'); v.display()
         v = x^2 d/dx + y^2 d/dy + z^2 d/dz
@@ -248,6 +272,7 @@ class BundleConnection(SageObject):
             self._latex_name = latex_name
         self._connection_forms = {}  # dict. of con. forms, with frames as keys
         self._coefficients = self._connection_forms
+        self._is_immutable = False
         # Initialization of derived quantities:
         self._init_derived()
 
@@ -454,8 +479,20 @@ class BundleConnection(SageObject):
             sage: E = M.vector_bundle(2, 'E')
             sage: e = E.local_frame('e')
             sage: nab = E.bundle_connection('nabla', latex_name=r'\nabla')
-            sage: nab._new_forms(e)  # random
-            dict of forms
+            sage: forms = nab._new_forms(e)
+            sage: [forms[k] for k in sorted(forms)]
+            [1-form connection (1,1) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 2-dimensional differentiable
+             manifold M,
+            1-form connection (1,2) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 2-dimensional differentiable
+             manifold M,
+            1-form connection (2,1) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 2-dimensional differentiable
+             manifold M,
+            1-form connection (2,2) of bundle connection nabla w.r.t. Local
+            frame (E|_M, (e_1,e_2)) on the 2-dimensional differentiable
+            manifold M]
 
         """
         dom = frame.domain()
@@ -511,13 +548,20 @@ class BundleConnection(SageObject):
             sage: e = E.local_frame('e')
             sage: nab = E.bundle_connection('nabla', r'\nabla')
             sage: nab[:] = 0  # initialize curvature forms
-            sage: nab.connection_forms() # random
-            {(1, 1): 1-form a on the 3-dimensional differentiable manifold M,
-             (1, 2): 1-form zero on the 3-dimensional differentiable
+            sage: forms = nab.connection_forms()
+            sage: [forms[k] for k in sorted(forms)]
+            [1-form connection (1,1) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 3-dimensional differentiable
              manifold M,
-             (2, 1): 1-form zero on the 3-dimensional differentiable
+            1-form connection (1,2) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 3-dimensional differentiable
              manifold M,
-             (2, 2): 1-form b on the 3-dimensional differentiable manifold M}
+            1-form connection (2,1) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 3-dimensional differentiable
+             manifold M,
+            1-form connection (2,2) of bundle connection nabla w.r.t. Local
+             frame (E|_M, (e_1,e_2)) on the 3-dimensional differentiable
+             manifold M]
 
         """
         if frame is None:
@@ -785,6 +829,9 @@ class BundleConnection(SageObject):
         To delete them, use the method :meth:`set_connection_form` instead.
 
         """
+        if self.is_immutable():
+            raise AssertionError("the coefficients of an immutable element "
+                                 "cannot be changed")
         if frame is None:
             smodule = self._vbundle.section_module(domain=self._base_space)
             frame = smodule.default_frame()
@@ -875,6 +922,9 @@ class BundleConnection(SageObject):
         To keep them, use the method :meth:`add_connection_form` instead.
 
         """
+        if self.is_immutable():
+            raise AssertionError("the coefficients of an immutable element "
+                                 "cannot be changed")
         if form:
             # TODO: Remove input `form` in Sage 9.3
             from sage.misc.superseded import deprecation
@@ -1341,3 +1391,141 @@ class BundleConnection(SageObject):
         rtxt = rtxt[:-1]  # remove the last new line
         rlatex = rlatex[:-2] + r'\end{array}'
         return FormattedExpansion(rtxt, rlatex)
+
+    def copy(self, name, latex_name=None):
+        r"""
+        Return an exact copy of ``self``.
+
+        INPUT:
+
+        - ``name`` -- name given to the copy
+        - ``latex_name`` -- (default: ``None``) LaTeX symbol to denote the
+          copy; if none is provided, the LaTeX symbol is set to ``name``
+
+        .. NOTE::
+
+            The name and the derived quantities are not copied.
+
+        EXAMPLES::
+
+            sage: M = Manifold(3, 'M', start_index=1)
+            sage: X.<x,y,z> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e')
+            sage: nab = E.bundle_connection('nabla')
+            sage: nab.set_connection_form(1, 1)[:] = [x^2, x-z, y^3]
+            sage: nab.set_connection_form(1, 2)[:] = [1, x, z*y^3]
+            sage: nab.set_connection_form(2, 1)[:] = [1, 2, 3]
+            sage: nab.set_connection_form(2, 2)[:] = [0, 0, 0]
+            sage: nab.display()
+            connection (1,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x^2 dx + (x - z) dy + y^3 dz
+            connection (1,2) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = dx + x dy + y^3*z dz
+            connection (2,1) of bundle connection nabla w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = dx + 2 dy + 3 dz
+            sage: nab_copy = nab.copy('nablo'); nab_copy
+            Bundle connection nablo on the Differentiable real vector bundle
+             E -> M of rank 2 over the base space 3-dimensional differentiable
+             manifold M
+            sage: nab is nab_copy
+            False
+            sage: nab == nab_copy
+            True
+            sage: nab_copy.display()
+            connection (1,1) of bundle connection nablo w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = x^2 dx + (x - z) dy + y^3 dz
+            connection (1,2) of bundle connection nablo w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = dx + x dy + y^3*z dz
+            connection (2,1) of bundle connection nablo w.r.t. Local frame
+             (E|_M, (e_1,e_2)) = dx + 2 dy + 3 dz
+
+        """
+        copy = type(self)(self._vbundle, name, latex_name=latex_name)
+        for frame, form_dict in self._connection_forms.items():
+            copy._coefficients[frame] = copy._new_forms(frame=frame)
+            for ind, form in form_dict.items():
+                copy._coefficients[frame][ind].copy_from(form)
+        return copy
+
+    def set_immutable(self):
+        r"""
+        Set ``self`` and all restrictions of ``self`` immutable.
+
+        EXAMPLES:
+
+        An affine connection can be set immutable::
+
+            sage: M = Manifold(3, 'M', start_index=1)
+            sage: X.<x,y,z> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e')
+            sage: nab = E.bundle_connection('nabla')
+            sage: nab.set_connection_form(1, 1)[:] = [x^2, x-z, y^3]
+            sage: nab.set_connection_form(1, 2)[:] = [1, x, z*y^3]
+            sage: nab.set_connection_form(2, 1)[:] = [1, 2, 3]
+            sage: nab.set_connection_form(2, 2)[:] = [0, 0, 0]
+            sage: nab.is_immutable()
+            False
+            sage: nab.set_immutable()
+            sage: nab.is_immutable()
+            True
+
+        The coefficients of immutable elements cannot be changed::
+
+            sage: f = E.local_frame('f')
+            sage: nab.add_connection_form(1, 1, frame=f)[:] = [x, y, z]
+            Traceback (most recent call last):
+            ...
+            AssertionError: the coefficients of an immutable element cannot
+             be changed
+
+        """
+        for form_dict in self._connection_forms.values():
+            for form in form_dict.values():
+                form.set_immutable()
+        self._is_immutable = True
+
+    def is_immutable(self):
+        r"""
+        Return ``True`` if this object is immutable, i.e. its coefficients
+        cannot be chanced, and ``False`` if it is not.
+
+        To set an affine connection immutable, use :meth:`set_immutable`.
+
+        EXAMPLES::
+
+            sage: M = Manifold(3, 'M', start_index=1)
+            sage: X.<x,y,z> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e')
+            sage: nab = E.bundle_connection('nabla')
+            sage: nab.is_immutable()
+            False
+            sage: nab.set_immutable()
+            sage: nab.is_immutable()
+            True
+
+        """
+        return self._is_immutable
+
+    def is_mutable(self):
+        r"""
+        Return ``True`` if this object is mutable, i.e. its coefficients can
+        be changed, and ``False`` if it is not.
+
+        EXAMPLES::
+
+            sage: M = Manifold(3, 'M', start_index=1)
+            sage: X.<x,y,z> = M.chart()
+            sage: E = M.vector_bundle(2, 'E')
+            sage: e = E.local_frame('e')
+            sage: nab = E.bundle_connection('nabla')
+            sage: nab.is_mutable()
+            True
+            sage: nab.set_immutable()
+            sage: nab.is_mutable()
+            False
+
+        """
+        return not self._is_immutable
