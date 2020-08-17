@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from distutils import log
-from distutils.core import setup
+from setuptools import setup, find_namespace_packages
 
 #########################################################
 ### Set source directory
@@ -41,6 +41,7 @@ if os.path.exists(sage.misc.lazy_import_cache.get_cache_file()):
 from sage_setup.command.sage_build import sage_build
 from sage_setup.command.sage_build_cython import sage_build_cython
 from sage_setup.command.sage_build_ext import sage_build_ext
+from Cython.Build import cythonize
 
 
 #########################################################
@@ -67,8 +68,10 @@ log.warn('distributions = {0}'.format(distributions))
 from sage_setup.find import find_python_sources
 python_packages, python_modules, cython_modules = find_python_sources(
     SAGE_SRC, ['sage', 'sage_setup'], distributions=distributions)
-
-log.debug('python_packages = {0}'.format(python_packages))
+python_packages = find_namespace_packages(where="src")
+log.warn('python_packages = {0}'.format(python_packages))
+cython_modules = [ "src/**/*.pyx"]
+log.warn('cython_modules = {0}'.format(cython_modules))
 
 print("Discovered Python/Cython sources, time: %.2f seconds." % (time.time() - t))
 
@@ -78,6 +81,15 @@ from sage_setup.command.sage_install import sage_install
 #########################################################
 ### Distutils
 #########################################################
+compile_time_env = dict(
+            PY_VERSION_HEX=sys.hexversion,
+            PY_MAJOR_VERSION=sys.version_info[0],
+            PY_PLATFORM=sys.platform
+        )
+cython_directives = dict(
+            language_level="3str",
+            cdivision=True,
+        )
 
 code = setup(name = 'sage',
       version     =  SAGE_VERSION,
@@ -87,6 +99,7 @@ code = setup(name = 'sage',
       author_email= 'https://groups.google.com/group/sage-support',
       url         = 'https://www.sagemath.org',
       packages    = python_packages,
+      package_dir = {"": "src"},
       package_data = {
           'sage.libs.gap': ['sage.gaprc'],
           'sage.interfaces': ['sage-maxima.lisp'],
@@ -168,8 +181,6 @@ code = setup(name = 'sage',
                  'bin/sage-update-version',
                  'bin/sage-upgrade',
                  ],
-      cmdclass = dict(build=sage_build,
-                      build_cython=sage_build_cython,
-                      build_ext=sage_build_ext,
-                      install=sage_install),
-      ext_modules = cython_modules)
+      ext_modules = cythonize(cython_modules, include_path=["src", "local/lib/python3.7/site-packages"], compile_time_env=compile_time_env, compiler_directives=cython_directives))
+
+      # TODO: Including site-packages as an include_path seems to be wrong, but it works for now...

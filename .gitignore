@@ -99,7 +99,17 @@ gitlab-build-docker.log
 /src/build
 /src/Makefile
 /src/bin/sage-env-config
-/build/bin/sage-build-env-config
+/build
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+/src/sage/**/*.c
+/src/sage/**/*.cpp
 
 #######################
 # tox generated files #
