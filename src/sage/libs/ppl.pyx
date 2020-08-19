@@ -1,4 +1,4 @@
-# distutils: sources = sage/libs/ppl_shim.cc
+# distutils: sources = src/sage/libs/ppl_shim.cc
 # distutils: language = c++
 # distutils: libraries = ppl m
 r"""

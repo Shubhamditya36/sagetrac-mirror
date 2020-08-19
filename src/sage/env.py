@@ -36,6 +36,7 @@ import os
 import socket
 import sys
 import sysconfig
+import platform
 from . import version
 
 
@@ -149,7 +150,7 @@ def var(key, *fallbacks, **kwds):
 
 
 # system info
-var('UNAME',               os.uname()[0])
+var('UNAME',               platform.uname()[0])
 var('HOSTNAME',            socket.gethostname())
 var('LOCAL_IDENTIFIER',    "{}.{}".format(HOSTNAME, os.getpid()))
 
@@ -362,7 +363,7 @@ def sage_include_directories(use_sources=False):
     import numpy
     import distutils.sysconfig
 
-    TOP = SAGE_SRC if use_sources else SAGE_LIB
+    TOP = 'src' if use_sources else SAGE_LIB
 
     return [TOP,
             os.path.join(TOP, 'sage', 'ext'),
@@ -387,6 +388,9 @@ def cython_aliases():
          'ZLIB_LIBRARIES']
     """
     import pkgconfig
+    from distutils import log
+
+    log.warn('pgk = {0}'.format(pkgconfig.variables('pkg-config')))
 
     aliases = {}
 

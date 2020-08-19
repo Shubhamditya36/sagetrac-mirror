@@ -6,7 +6,8 @@ import os
 import sys
 import time
 from distutils import log
-from setuptools import setup, find_namespace_packages
+from setuptools import setup, find_namespace_packages, Extension
+from Cython.Build.Dependencies import default_create_extension
 
 #########################################################
 ### Set source directory
@@ -39,9 +40,10 @@ if os.path.exists(sage.misc.lazy_import_cache.get_cache_file()):
 
 
 from sage_setup.command.sage_build import sage_build
-from sage_setup.command.sage_build_cython import sage_build_cython
+from sage_setup.command.sage_build_cython import include_dirs, sage_build_cython
 from sage_setup.command.sage_build_ext import sage_build_ext
 from Cython.Build import cythonize
+from sage.env import cython_aliases, sage_include_directories
 
 
 #########################################################
@@ -54,14 +56,45 @@ t = time.time()
 
 distributions = ['']
 
-from sage_setup.optional_extension import is_package_installed_and_updated
+#from sage_setup.optional_extension import is_package_installed_and_updated
 
-optional_packages_with_extensions = ['mcqd', 'bliss', 'tdlib', 'primecount',
-                                     'coxeter3', 'fes', 'sirocco', 'meataxe']
+#optional_packages_with_extensions = ['mcqd', 'bliss', 'tdlib', 'primecount',
+#                                     'coxeter3', 'fes', 'sirocco', 'meataxe']
 
-distributions += ['sage-{}'.format(pkg)
-                  for pkg in optional_packages_with_extensions
-                  if is_package_installed_and_updated(pkg)]
+#distributions += ['sage-{}'.format(pkg)
+#                  for pkg in optional_packages_with_extensions
+#                  if is_package_installed_and_updated(pkg)]
+
+## TODO: Only exclude the following files if the corresponding distribution is not loaded
+exclude = ['']
+# # sage_setup: distribution = sage-bliss
+exclude += ['src/sage/graphs/bliss.pyx']
+
+# # sage_setup: distribution = sage-tdlib
+exclude += ['src/sage/graphs/graph_decompositions/tdlib.pyx']
+
+# sage_setup: distribution = sage-mcqd
+exclude += ['src/sage/graphs/mcqd.pyx']
+
+# sage_setup: distribution = sage-primecount
+exclude += ['src/sage/interfaces/primecount.pyx']
+
+# sage_setup: distribution = sage-coxeter3
+exclude += ['src/sage/libs/coxeter3/coxeter.pyx']
+
+# sage_setup: distribution = sage-fes
+exclude += ['src/sage/libs/fes.pyx']
+
+# sage_setup: distribution = sage-meataxe
+exclude += ['src/sage/libs/meataxe.pyx', 'src/sage/matrix/matrix_gfpn_dense.pyx']
+
+# sage_setup: distribution = sage-sirocco
+exclude += ['src/sage/libs/sirocco.pyx']
+
+
+# TODO: Fails with 
+# src/sage/rings/padics/padic_capped_absolute_element.c:32285:233: note: expected ‘__mpz_struct *’ {aka ‘struct <anonymous> *’} but argument is of type ‘mpz_srcptr’ {aka ‘const struct <anonymous> *’}
+exclude += ['src/sage/rings/padics/padic_capped_absolute_element.pyx', 'src/sage/rings/padics/padic_capped_relative_element.pyx', 'src/sage/rings/padics/padic_fixed_mod_element.pyx', 'src/sage/rings/padics/padic_floating_point_element.pyx']
 
 log.warn('distributions = {0}'.format(distributions))
 
@@ -70,13 +103,28 @@ python_packages, python_modules, cython_modules = find_python_sources(
     SAGE_SRC, ['sage', 'sage_setup'], distributions=distributions)
 python_packages = find_namespace_packages(where="src")
 log.warn('python_packages = {0}'.format(python_packages))
-cython_modules = [ "src/**/*.pyx"]
+cython_modules = ["src/**/*.pyx"]
 log.warn('cython_modules = {0}'.format(cython_modules))
+
+include_directories = sage_include_directories(use_sources=True)
+log.warn('include_directories = {0}'.format(include_directories))
+
+aliases = cython_aliases()
+log.warn('aliases = {0}'.format(aliases))
 
 print("Discovered Python/Cython sources, time: %.2f seconds." % (time.time() - t))
 
 
 from sage_setup.command.sage_install import sage_install
+
+import numpy
+def my_create_extension(template, kwds):
+    # Add numpy and source folder to the include search path used by the compiler
+    # This is a workaround for https://github.com/cython/cython/issues/1480
+
+    include_dirs = kwds.get('include_dirs', []) + [numpy.get_include(), 'src', 'src/sage/ext']
+    kwds['include_dirs'] = include_dirs
+    return default_create_extension(template, kwds)
 
 #########################################################
 ### Distutils
@@ -181,6 +229,6 @@ code = setup(name = 'sage',
                  'bin/sage-update-version',
                  'bin/sage-upgrade',
                  ],
-      ext_modules = cythonize(cython_modules, include_path=["src", "local/lib/python3.7/site-packages"], compile_time_env=compile_time_env, compiler_directives=cython_directives))
+        ext_modules = cythonize(cython_modules, exclude=exclude, include_path=include_directories, compile_time_env=compile_time_env, compiler_directives=cython_directives, aliases=aliases, create_extension=my_create_extension))
 
       # TODO: Including site-packages as an include_path seems to be wrong, but it works for now...

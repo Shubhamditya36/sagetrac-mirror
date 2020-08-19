@@ -19,10 +19,6 @@ cdef extern from "Python.h":
     # Helper to get a pointer to an object's __dict__ slot, if any
     PyObject** _PyObject_GetDictPtr(obj)
 
-cdef extern from "sage/cpython/debugimpl.c":
-    void _type_debug(PyTypeObject*)
-
-
 from .getattr cimport AttributeErrorMessage
 
 
@@ -35,6 +31,8 @@ cdef:
     void* subtype_clear "subtype_clear" = (<PyTypeObject*>X).tp_clear
     void* subtype_dealloc "subtype_dealloc" = (<PyTypeObject*>X).tp_dealloc
 
+cdef extern from "sage/cpython/debugimpl.c":
+    void _type_debug(PyTypeObject*)
 
 def shortrepr(obj, max=50):
     """

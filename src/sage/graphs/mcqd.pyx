@@ -1,5 +1,4 @@
 # distutils: language = c++
-# sage_setup: distribution = sage-mcqd
 
 from sage.ext.memory_allocator cimport MemoryAllocator
 
