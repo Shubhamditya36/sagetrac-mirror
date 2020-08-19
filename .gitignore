@@ -110,6 +110,7 @@ __pycache__/
 *.so
 /src/sage/**/*.c
 /src/sage/**/*.cpp
+src/sage/modular/arithgroup/farey_symbol.h
 
 #######################
 # tox generated files #
@@ -118,3 +119,4 @@ __pycache__/
 /.tox
 /prefix
 worktree*
+
