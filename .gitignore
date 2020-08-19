@@ -99,7 +99,6 @@ gitlab-build-docker.log
 /src/build
 /src/Makefile
 /src/bin/sage-env-config
-/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -108,9 +107,13 @@ __pycache__/
 
 # C extensions
 *.so
-/src/sage/**/*.c
-/src/sage/**/*.cpp
+src/sage/**/*.c
+src/sage/**/*.cpp
 src/sage/modular/arithgroup/farey_symbol.h
+
+# Temporary build files
+build/temp.*/
+build/bin/sage-build-env-config
 
 #######################
 # tox generated files #
