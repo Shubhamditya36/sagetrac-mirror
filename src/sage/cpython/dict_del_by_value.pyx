@@ -2,14 +2,7 @@
 Delete item from PyDict by exact value and hash
 
 Beware that the implementation of the routine here relies on implementation
-details of CPython's dict that go beyond the published API. This file depends
-on python version when cythonized. It expects PY_VERSION_HEX to be available
-in the cythonization and the result depends on it (and needs to match the
-python version the C-compiler compiles it against). Usage should do something
-along the lines of
-
-    cythonize("dict_del_by_value.pyx",
-        compile_time_env({"PY_VERSION_HEX": sys.hexversion}))
+details of CPython's dict that go beyond the published API.
 
 AUTHORS:
 
@@ -32,6 +25,113 @@ from weakref import KeyedRef
 from cpython.list cimport PyList_New
 from cpython cimport Py_XINCREF, Py_XDECREF
 from cpython.object cimport PyObject
+
+from libc.stdint cimport int8_t,int16_t,int32_t,int64_t
+cdef extern from "Python.h":
+    ctypedef struct PyDictKeysObject
+
+    ctypedef struct PyDictObject:
+        Py_ssize_t ma_used
+        PyDictKeysObject * ma_keys
+        PyObject ** ma_values
+
+    #we need this redefinition because we want to be able to call
+    #PyWeakref_GetObject with borrowed references. This is the recommended
+    #strategy according to Cython/Includes/cpython/__init__.pxd
+    PyObject* PyWeakref_GetObject(PyObject * wr)
+    int PyList_SetItem(object list, Py_ssize_t index, PyObject * item) except -1
+    int PyWeakref_Check(PyObject * ob)
+####
+#definitions replicated from CPython's Objects/dict-common.h
+#(this file is not exported from CPython, so we need to be
+#careful the definitions are in step with what happens there.
+
+ctypedef void* dict_lookup_func  # Precise definition not needed
+
+ctypedef union IndexBlock:
+    int8_t as_1[8]
+    int16_t as_2[4]
+    int32_t as_4[2]
+    int64_t as_8[1]
+
+ctypedef struct MyPyDictKeysObject:
+    Py_ssize_t dk_refcnt
+    Py_ssize_t dk_size
+    dict_lookup_func dk_lookup
+    Py_ssize_t dk_usable
+    Py_ssize_t dk_nentries
+    IndexBlock dk_indices
+
+ctypedef struct PyDictKeyEntry:
+    Py_hash_t me_hash
+    PyObject * me_key
+    PyObject * me_value
+
+cdef Py_ssize_t DKIX_EMPTY = -1
+cdef Py_ssize_t DKIX_DUMMY = -2
+cdef Py_ssize_t DKIX_ERROR = -3
+
+#####
+#These routines are copied from CPython's Object/dictobject.c
+#in order to access PyDictKeysObject fields
+
+cdef inline int DK_IXSIZE(MyPyDictKeysObject *keys):
+    cdef Py_ssize_t s = keys.dk_size
+    if s <= 0xff:
+        return 1
+    elif s <= 0xffff:
+        return 2
+    elif s <= 0xffffffff:
+        return 4
+    else:
+        return 8
+
+cdef inline PyDictKeyEntry * DK_ENTRIES(MyPyDictKeysObject *keys):
+    return <PyDictKeyEntry*> &(keys.dk_indices.as_1[keys.dk_size * DK_IXSIZE(keys)])
+
+cdef inline Py_ssize_t dk_get_index(MyPyDictKeysObject *keys, Py_ssize_t i):
+    cdef Py_ssize_t s = keys.dk_size
+    if s <= 0xff:
+        return keys.dk_indices.as_1[i]
+    elif s <= 0xffff:
+        return keys.dk_indices.as_2[i]
+    elif s <= 0xffffffff:
+        return keys.dk_indices.as_4[i]
+    else:
+        return keys.dk_indices.as_8[i]
+
+cdef inline void dk_set_index(MyPyDictKeysObject *keys, Py_ssize_t i, Py_ssize_t ix):
+    cdef Py_ssize_t s = keys.dk_size
+    if s <= 0xff:
+        keys.dk_indices.as_1[i] = ix
+    elif s <= 0xffff:
+        keys.dk_indices.as_2[i] = ix
+    elif s <= 0xffffffff:
+        keys.dk_indices.as_4[i] = ix
+    else:
+        keys.dk_indices.as_8[i] = ix
+
+#End of replication of Object/dictobject.c
+######
+
+cdef dict_lookup_func lookdict
+
+cdef dict_lookup_func DK_LOOKUP(PyDictObject *mp):
+    return (<MyPyDictKeysObject *>(mp.ma_keys)).dk_lookup
+
+def init_lookdict():
+    global lookdict
+    # A dict which a non-string key uses the generic "lookdict"
+    # as lookup function
+    cdef object D = {}
+    D[0] = 0
+    lookdict = DK_LOOKUP(<PyDictObject *>D)
+
+init_lookdict()
+
+cdef int del_dictitem_by_exact_value(PyDictObject *mp, PyObject *value, Py_hash_t hash) except -1:
+    """
+    This is used in callbacks for the weak values of :class:`WeakValueDictionary`.
 
 from libc.stdint cimport int8_t,int16_t,int32_t,int64_t
 cdef extern from "Python.h":

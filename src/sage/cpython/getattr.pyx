@@ -8,8 +8,7 @@ from .string cimport bytes_to_str
 
 cdef extern from "Python.h":
     r"""
-    /* Coded in C because of substantial differences between Python 2
-     * and Python 3 and class internals need to be accessed. */
+    /* Coded in C because class internals need to be accessed. */
     static PyObject*
     instance_getattr(PyObject* obj, PyObject* name)
     {
@@ -17,10 +16,9 @@ cdef extern from "Python.h":
             return _PyType_Lookup((PyTypeObject*)obj, name);
         }
 
-        PyObject* dict;
         PyObject** dptr = _PyObject_GetDictPtr(obj);
         if (dptr == NULL) return NULL;
-        dict = *dptr;
+        PyObject* dict = *dptr;
         if (dict == NULL) return NULL;
         return PyDict_GetItem(dict, name);
     }

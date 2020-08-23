@@ -12,7 +12,7 @@ static CYTHON_INLINE int ccreadstr(T& x, PyObject* b)
 {
     PyObject* converted = NULL;
 
-    // Accept "str" input on Python 3
+    // Accept "str" input
     if (PyUnicode_Check(b))
     {
         converted = PyUnicode_EncodeFSDefault(b);
@@ -40,7 +40,7 @@ static CYTHON_INLINE PyObject* ccrepr(const T& x)
     std::ostringstream instore;
     instore << x;
     std::string instr = instore.str();
-return PyUnicode_DecodeFSDefaultAndSize(instr.c_str(), instr.size());
+    return PyUnicode_DecodeFSDefaultAndSize(instr.c_str(), instr.size());
 }
 
 
