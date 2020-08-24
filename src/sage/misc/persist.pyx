@@ -591,7 +591,7 @@ _DEFAULT_PROTOCOL_VERSION = 4
 
 
 class _BaseUnpickler(pickle.Unpickler):
-        """
+    """
     Provides the Python 3 implementation for
     :class:`sage.misc.persist.SageUnpickler`.
 

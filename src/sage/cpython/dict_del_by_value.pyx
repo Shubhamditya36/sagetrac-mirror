@@ -24,7 +24,6 @@ from weakref import KeyedRef
 
 from cpython.list cimport PyList_New
 from cpython cimport Py_XINCREF, Py_XDECREF
-from cpython.object cimport PyObject
 
 from libc.stdint cimport int8_t,int16_t,int32_t,int64_t
 cdef extern from "Python.h":
