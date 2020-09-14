@@ -20,6 +20,7 @@ export SAGE_PKGCONFIG="$SAGE_LOCAL/lib/pkgconfig"
 export SAGE_LOGS="$SAGE_ROOT/logs/pkgs"
 export SAGE_SPKG_INST="$SAGE_LOCAL/var/lib/sage/installed"
 export SAGE_SPKG_SCRIPTS="$SAGE_LOCAL/var/lib/sage/scripts"
+export SAGE_SPKG_WHEELS="$SAGE_LOCAL/var/lib/sage/wheels"
 
 if [ -z "${SAGE_ORIG_PATH_SET}" ]; then
     SAGE_ORIG_PATH=$PATH && export SAGE_ORIG_PATH
@@ -130,6 +131,11 @@ EOF
         echo $warnings >&2
     fi
 
+fi
+
+# Update simple repository index
+if command dir2pi >&/dev/null; then
+    dir2pi "$SAGE_SPKG_WHEELS" && echo "Updated PEP 503 simple repository index in $SAGE_SPKG_WHEELS/simple"
 fi
 
 # Build succeeded.
