@@ -1,5 +1,5 @@
-# distutils: sources = sage/geometry/triangulation/functions.cc sage/geometry/triangulation/data.cc sage/geometry/triangulation/triangulations.cc
-# distutils: depends = sage/geometry/triangulation/functions.h sage/geometry/triangulation/data.h sage/geometry/triangulation/triangulations.h
+# distutils: sources = src/sage/geometry/triangulation/functions.cc src/sage/geometry/triangulation/data.cc src/sage/geometry/triangulation/triangulations.cc
+# distutils: depends = src/sage/geometry/triangulation/functions.h src/sage/geometry/triangulation/data.h src/sage/geometry/triangulation/triangulations.h
 # distutils: language = c++
 
 r"""

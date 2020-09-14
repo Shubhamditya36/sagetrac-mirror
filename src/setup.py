@@ -6,7 +6,8 @@ import os
 import sys
 import time
 from distutils import log
-from distutils.core import setup
+from setuptools import setup, find_namespace_packages
+from Cython.Build.Dependencies import default_create_extension
 
 # Work around a Cython problem in Python 3.8.x on macOS
 # https://github.com/cython/cython/issues/3262
@@ -43,47 +44,71 @@ import sage.misc.lazy_import_cache
 if os.path.exists(sage.misc.lazy_import_cache.get_cache_file()):
     os.unlink(sage.misc.lazy_import_cache.get_cache_file())
 
-
-from sage_setup.command.sage_build import sage_build
-from sage_setup.command.sage_build_cython import sage_build_cython
-from sage_setup.command.sage_build_ext import sage_build_ext
+from Cython.Build import cythonize
+from sage.env import cython_aliases, sage_include_directories
 
 
 #########################################################
 ### Discovering Sources
 #########################################################
 
-# TODO: This should be quiet by default
-print("Discovering Python/Cython source code....")
+log.info("Discovering Python/Cython source code....")
 t = time.time()
 
-distributions = ['']
-
+# Exclude a few files if the corresponding distribution is not loaded
 from sage_setup.optional_extension import is_package_installed_and_updated
+from sage_setup.find import find_sources_by_distribution
 
-optional_packages_with_extensions = ['mcqd', 'bliss', 'tdlib', 'primecount',
-                                     'coxeter3', 'fes', 'sirocco', 'meataxe']
+optional_packages = ['mcqd', 'bliss', 'tdlib', 'primecount',
+                     'coxeter3', 'fes', 'sirocco', 'meataxe']
+not_installed_packages = [package for package in optional_packages
+                          if not is_package_installed_and_updated(package)]
 
-distributions += ['sage-{}'.format(pkg)
-                  for pkg in optional_packages_with_extensions
-                  if is_package_installed_and_updated(pkg)]
+distributions_to_exclude = ['sage-{}'.format(pkg)
+                            for pkg in not_installed_packages]
+files_to_exclude = find_sources_by_distribution(SAGE_SRC, distributions_to_exclude)
 
-log.warn('distributions = {0}'.format(distributions))
-
-from sage_setup.find import find_python_sources
-python_packages, python_modules, cython_modules = find_python_sources(
-    SAGE_SRC, ['sage', 'sage_setup'], distributions=distributions)
-
-log.debug('python_packages = {0}'.format(python_packages))
-
-print("Discovered Python/Cython sources, time: %.2f seconds." % (time.time() - t))
+log.warn('files_to_exclude = {0}'.format(files_to_exclude))
 
 
-from sage_setup.command.sage_install import sage_install
+# TODO: Fails with 
+# src/sage/rings/padics/padic_capped_absolute_element.c:32285:233: note: expected ‘__mpz_struct *’ {aka ‘struct <anonymous> *’} but argument is of type ‘mpz_srcptr’ {aka ‘const struct <anonymous> *’}
+files_to_exclude += ['src/sage/rings/padics/padic_capped_absolute_element.pyx', 'src/sage/rings/padics/padic_capped_relative_element.pyx', 'src/sage/rings/padics/padic_fixed_mod_element.pyx', 'src/sage/rings/padics/padic_floating_point_element.pyx']
+
+python_packages = find_namespace_packages(where=SAGE_SRC)
+log.warn('python_packages = {0}'.format(python_packages))
+cython_modules = ["src/**/*.pyx"]
+log.warn('cython_modules = {0}'.format(cython_modules))
+
+include_directories = sage_include_directories(use_sources=True)
+log.warn('include_directories = {0}'.format(include_directories))
+
+aliases = cython_aliases()
+log.warn('aliases = {0}'.format(aliases))
+
+log.info("Discovered Python/Cython sources, time: %.2f seconds." % (time.time() - t))
+
+import numpy
+def my_create_extension(template, kwds):
+    # Add numpy and source folder to the include search path used by the compiler
+    # This is a workaround for https://github.com/cython/cython/issues/1480
+
+    include_dirs = kwds.get('include_dirs', []) + [numpy.get_include(), 'src', 'src/sage/ext']
+    kwds['include_dirs'] = include_dirs
+    return default_create_extension(template, kwds)
 
 #########################################################
 ### Distutils
 #########################################################
+compile_time_env = dict(
+            PY_VERSION_HEX=sys.hexversion,
+            PY_MAJOR_VERSION=sys.version_info[0],
+            PY_PLATFORM=sys.platform
+        )
+cython_directives = dict(
+            language_level="3str",
+            cdivision=True,
+        )
 
 code = setup(name = 'sage',
       version     =  SAGE_VERSION,
@@ -93,6 +118,7 @@ code = setup(name = 'sage',
       author_email= 'https://groups.google.com/group/sage-support',
       url         = 'https://www.sagemath.org',
       packages    = python_packages,
+      package_dir = {"": "src"},
       package_data = {
           'sage.libs.gap': ['sage.gaprc'],
           'sage.interfaces': ['sage-maxima.lisp'],
@@ -174,8 +200,10 @@ code = setup(name = 'sage',
                  'bin/sage-update-version',
                  'bin/sage-upgrade',
                  ],
-      cmdclass = dict(build=sage_build,
-                      build_cython=sage_build_cython,
-                      build_ext=sage_build_ext,
-                      install=sage_install),
-      ext_modules = cython_modules)
+        ext_modules = cythonize(cython_modules,
+                                exclude=files_to_exclude,
+                                include_path=include_directories,
+                                compile_time_env=compile_time_env,
+                                compiler_directives=cython_directives,
+                                aliases=aliases,
+                                create_extension=my_create_extension))

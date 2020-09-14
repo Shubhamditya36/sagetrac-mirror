@@ -99,7 +99,21 @@ gitlab-build-docker.log
 /src/build
 /src/Makefile
 /src/bin/sage-env-config
-/build/bin/sage-build-env-config
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+src/sage/**/*.c
+src/sage/**/*.cpp
+src/sage/modular/arithgroup/farey_symbol.h
+
+# Temporary build files
+build/temp.*/
+build/bin/sage-build-env-config
 
 /build/pkgs/*/src/build
 /build/pkgs/*/src/dist
@@ -114,3 +128,4 @@ gitlab-build-docker.log
 /.tox
 /prefix
 worktree*
+

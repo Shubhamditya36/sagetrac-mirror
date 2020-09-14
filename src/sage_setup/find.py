@@ -58,7 +58,8 @@ def read_distribution(src_file):
                     return value
     return ''
 
-def find_python_sources(src_dir, modules=['sage'], distributions=None):
+
+def find_sources_by_distribution(src_dir, distributions):
     """
     Find all Python packages and Python/Cython modules in the sources.
 
@@ -130,47 +131,16 @@ def find_python_sources(src_dir, modules=['sage'], distributions=None):
         sage: find_python_sources(SAGE_SRC, modules=['sage_setup'])
         (['sage_setup', ...], [...'sage_setup.find'...], [])
     """
-    from distutils.extension import Extension
+    files = []
 
-    PYMOD_EXT = get_extensions('source')[0]
-    INIT_FILE = '__init__' + PYMOD_EXT
+    for dirpath, dirnames, filenames in os.walk(src_dir):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            base, ext = os.path.splitext(filename)
+            if ext == '.pyx' and read_distribution(filepath) in distributions:
+                files.append(filepath)
 
-    python_packages = []
-    python_modules = []
-    cython_modules = []
-
-    cwd = os.getcwd()
-    try:
-        os.chdir(src_dir)
-        for module in modules:
-            for dirpath, dirnames, filenames in os.walk(module):
-                package = dirpath.replace(os.path.sep, '.')
-                if INIT_FILE in filenames:
-                    # Ordinary package.
-                    if distributions is None or '' in distributions:
-                        python_packages.append(package)
-                else:
-                    continue
-
-                def is_in_distributions(filename):
-                    if distributions is None:
-                        return True
-                    distribution = read_distribution(os.path.join(dirpath, filename))
-                    return distribution in distributions
-
-                for filename in filenames:
-                    base, ext = os.path.splitext(filename)
-                    if ext == PYMOD_EXT and base != '__init__':
-                        if is_in_distributions(filename):
-                            python_modules.append(package + '.' + base)
-                    if ext == '.pyx':
-                        if is_in_distributions(filename):
-                            cython_modules.append(Extension(package + '.' + base,
-                                                            sources=[os.path.join(dirpath, filename)]))
-
-    finally:
-        os.chdir(cwd)
-    return python_packages, python_modules, cython_modules
+    return files
 
 def find_extra_files(src_dir, modules, cythonized_dir, special_filenames=[]):
     """
