@@ -1,7 +1,19 @@
+## requirements.txt for creating venvs with sagelib
+##
+## Usage:
+##
+##                   $ ../sage -sh
+##         (sage-sh) $ python3 -m venv venv1
+## (venv1) (sage-sh) $ pip install -r requirements.txt
+## (venv1) (sage-sh) $ pip install -e .
+
+--index-url=file://${SAGE_LOCAL}/var/lib/sage/wheels/simple
+--extra-index-url=https://pypi.python.org/simple
+
 #sage_conf
 #sage_setup
 six             # use of six should be removed from sage_setup
-Cython==0.29.17
+Cython>=0.29.17
 pkgconfig
 cysignals
 gmpy2==2.1.0b1
@@ -15,5 +27,5 @@ cypari2        # but building bdist_wheel of cypari2 fails with recent pip... ht
 
 psutil
 pexpect
-pplpy
-ipython<=5.8
+#pplpy
+ipython>=7
