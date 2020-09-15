@@ -10,7 +10,7 @@
 --index-url=file://${SAGE_LOCAL}/var/lib/sage/wheels/simple
 --extra-index-url=https://pypi.python.org/simple
 
-#sage_conf
+sage_conf
 #sage_setup
 six             # use of six should be removed from sage_setup
 Cython>=0.29.17
