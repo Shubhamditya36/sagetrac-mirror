@@ -397,9 +397,13 @@ class BackendIPythonCommandline(BackendIPython):
         """
         return True
 
-    def threejs_offline_scripts(self):
+    def threejs_offline_scripts(self, fat_lines=False):
         """
         Three.js scripts for the IPython command line
+
+        INPUT:
+
+        - ``fat_lines`` -- whether to include scripts for drawing "fat" lines
 
         OUTPUT:
 
@@ -414,13 +418,15 @@ class BackendIPythonCommandline(BackendIPython):
         """
         from sage.env import THREEJS_DIR
 
-        scripts = [
-            os.path.join(THREEJS_DIR, script)
-            for script in [
-                'build/three.min.js',
-                'examples/js/controls/OrbitControls.js',
-            ]
-        ]
+        scripts = ['build/three.min.js',
+                   'examples/js/controls/OrbitControls.js']
+        if fat_lines:
+            scripts += ['examples/js/lines/LineMaterial,js',
+                        'examples/js/lines/LineSegmentsGeometry.js'
+                        'examples/js/lines/LineGeometry.js'
+                        'examples/js/lines/LineSegments2.js'
+                        'examples/js/lines/Line2.js']
+        scripts = [os.path.join(THREEJS_DIR, script) for script in scripts]
 
         if sys.platform == 'cygwin':
             import cygwin
@@ -590,9 +596,13 @@ class BackendIPythonNotebook(BackendIPython):
         else:
             raise TypeError('rich_output type not supported')
 
-    def threejs_offline_scripts(self):
+    def threejs_offline_scripts(self, fat_lines=False):
         """
         Three.js scripts for the IPython notebook
+
+        INPUT:
+
+        - ``fat_lines`` -- whether to include scripts for drawing "fat" lines
 
         OUTPUT:
 
@@ -606,11 +616,22 @@ class BackendIPythonNotebook(BackendIPython):
             '...<script src="/nbextensions/threejs/build/three.min...<\\/script>...'
         """
         from sage.repl.rich_output import get_display_manager
-        CDN_scripts = get_display_manager().threejs_scripts(online=True)
-        return """
+        CDN_scripts = get_display_manager().threejs_scripts(online=True, fat_lines=fat_lines)
+        scripts = """
 <script src="/nbextensions/threejs/build/three.min.js"></script>
 <script src="/nbextensions/threejs/examples/js/controls/OrbitControls.js"></script>
+        """
+        if fat_lines:
+            scripts += """
+<script src="/nbextensions/threejs/examples/js/lines/LineMaterial.js"></script>
+<script src="/nbextensions/threejs/examples/js/lines/LineSegmentsGeometry.js"></script>
+<script src="/nbextensions/threejs/examples/js/lines/LineGeometry.js"></script>
+<script src="/nbextensions/threejs/examples/js/lines/LineSegments2.js"></script>
+<script src="/nbextensions/threejs/examples/js/lines/Line2.js"></script>
+            """
+        scripts += """
 <script>
   if ( !window.THREE ) document.write('{}');
 </script>
         """.format(CDN_scripts.replace('</script>', r'<\/script>').replace('\n', ' \\\n'))
+        return scripts

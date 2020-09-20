@@ -716,13 +716,16 @@ class DisplayManager(SageObject):
         buf = OutputBuffer.from_file(filename)
         return output_container(buf)
 
-    def threejs_scripts(self, online):
+    def threejs_scripts(self, online, fat_lines=False):
         """
         Return Three.js script tags for the current backend.
 
         INPUT:
 
         - ``online`` -- Boolean determining script usage context
+        - ``fat_lines`` -- Boolean determining whether to include scripts for
+          drawing "fat" lines as in the example:
+          `three.js - fat lines <https://threejs.org/examples/?q=fat#webgl_lines_fat>`_.
 
         OUTPUT:
 
@@ -750,12 +753,21 @@ class DisplayManager(SageObject):
             with open(os.path.join(sage.env.THREEJS_DIR, 'build', 'three.min.js')) as f:
                 text = f.read().replace('\n','')
             version = re.search(r'REVISION="(\d+)"', text).group(1)
-            return """
+            scripts = """
 <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/examples/js/controls/OrbitControls.js"></script>
-            """.format(version)
+            """
+            if fat_lines:
+                scripts += """
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/examples/js/lines/LineMaterial.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/examples/js/lines/LineSegmentsGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/examples/js/lines/LineGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/examples/js/lines/LineSegments2.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r{0}/examples/js/lines/Line2.js"></script>
+                """
+            return scripts.format(version)
         try:
-            return self._backend.threejs_offline_scripts()
+            return self._backend.threejs_offline_scripts(fat_lines=fat_lines)
         except AttributeError:
             raise ValueError(
                 'current backend does not support offline threejs graphics')
