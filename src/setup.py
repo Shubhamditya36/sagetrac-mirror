@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from distutils import log
-from distutils.core import setup
+from setuptools import setup
 
 # Work around a Cython problem in Python 3.8.x on macOS
 # https://github.com/cython/cython/issues/3262
