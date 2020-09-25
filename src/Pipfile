@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pkgconfig = "*"
+cython = "*"
+
+[packages]
+numpy = "*"
+cysignals = "*"
+cypari2 = "*"
+gmpy2 = ">=2.1.0b5"
+
+[requires]
+python_version = "3.8"
+
+[packages.e1839a8]
+path = "."
+editable = true
