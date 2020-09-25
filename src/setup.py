@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 import os
-from platform import platform
+import platform
 import sys
 import time
 from distutils import log
@@ -12,7 +12,7 @@ from Cython.Build.Dependencies import default_create_extension
 
 # Work around a Cython problem in Python 3.8.x on macOS
 # https://github.com/cython/cython/issues/3262
-if platform.uname().sysname == 'Darwin':
+if platform.system() == 'Darwin':
     import multiprocessing
     multiprocessing.set_start_method('fork', force=True)
 
@@ -191,7 +191,7 @@ files_to_exclude += [
     'sage/matrix/matrix_mod2_dense.pyx',
     'sage/matrix/matrix_rational_dense.pyx',
     'sage/modules/vector_mod2_dense.pyx',
-    'sage/rings/polynomial/pbori.pyx',
+    'sage/rings/polynomial/pbori/pbori.pyx',
     'sage/rings/polynomial/polynomial_gf2x.pyx'
 ]
 
@@ -240,7 +240,6 @@ code = setup(name = 'sage',
       author_email= 'https://groups.google.com/group/sage-support',
       url         = 'https://www.sagemath.org',
       packages    = python_packages,
-      package_dir = {"": "src"},
       package_data = {
           'sage.libs.gap': ['sage.gaprc'],
           'sage.interfaces': ['sage-maxima.lisp'],
