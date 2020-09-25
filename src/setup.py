@@ -3,11 +3,18 @@
 from __future__ import print_function
 
 import os
+from platform import platform
 import sys
 import time
 from distutils import log
 from setuptools import setup, find_namespace_packages
 from Cython.Build.Dependencies import default_create_extension
+
+# Work around a Cython problem in Python 3.8.x on macOS
+# https://github.com/cython/cython/issues/3262
+if platform.uname().sysname == 'Darwin':
+    import multiprocessing
+    multiprocessing.set_start_method('fork', force=True)
 
 #########################################################
 ### Set source directory
@@ -63,7 +70,6 @@ distributions_to_exclude = ['sage-{}'.format(pkg)
 files_to_exclude = find_sources_by_distribution(SAGE_SRC, distributions_to_exclude)
 
 log.warn('files_to_exclude = {0}'.format(files_to_exclude))
-
 
 # TODO: Fails with 
 # src/sage/rings/padics/padic_capped_absolute_element.c:32285:233: note: expected ‘__mpz_struct *’ {aka ‘struct <anonymous> *’} but argument is of type ‘mpz_srcptr’ {aka ‘const struct <anonymous> *’}
@@ -196,8 +202,7 @@ log.warn('cython_modules = {0}'.format(cython_modules))
 
 include_directories = sage_include_directories(use_sources=True)
 include_directories += ['.']
-# for gmpy2 support
-#include_directories += sys.path
+
 log.warn('include_directories = {0}'.format(include_directories))
 
 aliases = cython_aliases()
@@ -235,6 +240,7 @@ code = setup(name = 'sage',
       author_email= 'https://groups.google.com/group/sage-support',
       url         = 'https://www.sagemath.org',
       packages    = python_packages,
+      package_dir = {"": "src"},
       package_data = {
           'sage.libs.gap': ['sage.gaprc'],
           'sage.interfaces': ['sage-maxima.lisp'],
