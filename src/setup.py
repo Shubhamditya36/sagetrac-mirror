@@ -69,12 +69,135 @@ log.warn('files_to_exclude = {0}'.format(files_to_exclude))
 # src/sage/rings/padics/padic_capped_absolute_element.c:32285:233: note: expected ‘__mpz_struct *’ {aka ‘struct <anonymous> *’} but argument is of type ‘mpz_srcptr’ {aka ‘const struct <anonymous> *’}
 files_to_exclude += ['src/sage/rings/padics/padic_capped_absolute_element.pyx', 'src/sage/rings/padics/padic_capped_relative_element.pyx', 'src/sage/rings/padics/padic_fixed_mod_element.pyx', 'src/sage/rings/padics/padic_floating_point_element.pyx']
 
+# TODO: Fails because sage/ext/interpreters/ is empty
+files_to_exclude += ['sage/calculus/integration.pyx', 'sage/plot/plot3d/parametric_surface.pyx']
+
+# TODO: Fails due to missing Singular lib
+files_to_exclude += [
+    'sage/algebras/letterplace/free_algebra_element_letterplace.pyx',
+    'sage/algebras/letterplace/free_algebra_letterplace.pyx',
+    'sage/algebras/letterplace/letterplace_ideal.pyx',
+    'sage/libs/pynac/constant.pyx',
+    'sage/libs/pynac/pynac.pyx',
+    'sage/libs/singular/function.pyx',
+    'sage/libs/singular/groebner_strategy.pyx',
+    'sage/libs/singular/option.pyx',
+    'sage/libs/singular/polynomial.pyx',
+    'sage/libs/singular/ring.pyx',
+    'sage/libs/singular/singular.pyx',
+    'sage/matrix/matrix_mpolynomial_dense.pyx',
+    'sage/rings/polynomial/multi_polynomial_ideal_libsingular.pyx',
+    'sage/rings/polynomial/multi_polynomial_libsingular.pyx',
+    'sage/rings/polynomial/plural.pyx',
+    'sage/symbolic/comparison.pyx',
+    'sage/symbolic/constants_c.pyx',
+    'sage/symbolic/expression.pyx',
+    'sage/symbolic/function.pyx',
+    'sage/symbolic/getitem.pyx',
+    'sage/symbolic/ring.pyx',
+    'sage/symbolic/series.pyx',
+    'sage/symbolic/substitution_map.pyx',
+]
+
+# TODO: Fails due to missing GAP lib
+files_to_exclude += [
+    'sage/coding/codecan/codecan.pyx',
+    'sage/combinat/enumeration_mod_permgroup.pyx',
+    'sage/combinat/root_system/reflection_group_c.pyx',
+    'sage/combinat/root_system/reflection_group_element.pyx',
+    'sage/graphs/spanning_tree.pyx',
+    'sage/groups/libgap_wrapper.pyx',
+    'sage/groups/matrix_gps/group_element.pyx',
+    'sage/groups/perm_gps/permgroup_element.pyx',
+    'sage/groups/perm_gps/partn_ref/automorphism_group_canonical_label.pyx',
+    'sage/groups/perm_gps/partn_ref/canonical_augmentation.pyx',
+    'sage/groups/perm_gps/partn_ref/data_structures.pyx',
+    'sage/groups/perm_gps/partn_ref/double_coset.pyx',
+    'sage/groups/perm_gps/partn_ref/refinement_binary.pyx',
+    'sage/groups/perm_gps/partn_ref/refinement_graphs.pyx',
+    'sage/groups/perm_gps/partn_ref/refinement_lists.pyx',
+    'sage/groups/perm_gps/partn_ref/refinement_matrices.pyx',
+    'sage/groups/perm_gps/partn_ref/refinement_python.pyx',
+    'sage/groups/perm_gps/partn_ref/refinement_sets.pyx',
+    'sage/groups/perm_gps/partn_ref2/refinement_generic.pyx',
+    'sage/libs/gap/element.pyx',
+    'sage/libs/gap/libgap.pyx',
+    'sage/libs/gap/util.pyx',
+    'sage/matrix/matrix_gap.pyx',
+    'sage/sets/disjoint_set.pyx'
+]
+
+# TODO: Fails due to missing Arb lib
+files_to_exclude += [
+    'sage/libs/arb/arith.pyx',
+    'sage/matrix/matrix_complex_ball_dense.pyx',
+    'sage/rings/complex_arb.pyx',
+    'sage/rings/number_field/number_field_element_quadratic.pyx',
+    'sage/rings/polynomial/polynomial_complex_arb.pyx',
+    'sage/rings/real_arb.pyx'
+]
+
+# TODO: Fails due to missing ecl lib
+files_to_exclude += ['sage/libs/ecl.pyx']
+
+# TODO: Fails due to missing giac lib
+files_to_exclude += ['sage/libs/giac/giac.pyx']
+
+# TODO: Fails due to missing homfly lib
+files_to_exclude += ['sage/libs/homfly.pyx']
+
+# TODO: Fails due to problem in cysignals (missing cysigs)
+files_to_exclude += [
+    'sage/rings/padics/padic_capped_absolute_element.pyx',
+    'sage/rings/padics/padic_capped_relative_element.pyx',
+    'sage/rings/padics/padic_fixed_mod_element.pyx',
+    'sage/rings/padics/padic_floating_point_element.pyx'
+]
+
+# TODO: Fails due to missing CCObject
+files_to_exclude += ['sage/rings/padics/pow_computer_ext.pyx']
+
+# TODO: Fails due to missing linbox lib
+files_to_exclude += [
+    'sage/libs/linbox/linbox_flint_interface.pyx',
+    'sage/matrix/matrix_integer_sparse.pyx',
+    'sage/matrix/matrix_modn_dense_double.pyx',
+    'sage/matrix/matrix_modn_dense_float.pyx',
+    'sage/matrix/matrix_modn_sparse.pyx'
+]
+
+# TODO: Fails due to missing ratpoints lib
+files_to_exclude += ['sage/libs/ratpoints.pyx', 'sage/schemes/elliptic_curves/descent_two_isogeny.pyx']
+
+# TODO: Fails due to missing zn_poly lib
+files_to_exclude += [
+    'sage/modular/modsym/p1list.pyx',
+    'sage/modular/pollack_stevens/dist.pyx',
+    'sage/rings/fraction_field_FpT.pyx',
+    'sage/rings/polynomial/polynomial_zmod_flint.pyx',
+    'sage/schemes/hyperelliptic_curves/hypellfrob.pyx',
+]
+
+# TODO: Fails due to missing mari lib
+files_to_exclude += [
+    'sage/matrix/matrix_gf2e_dense.pyx',
+    'sage/matrix/matrix_integer_dense.pyx',
+    'sage/matrix/matrix_mod2_dense.pyx',
+    'sage/matrix/matrix_rational_dense.pyx',
+    'sage/modules/vector_mod2_dense.pyx',
+    'sage/rings/polynomial/pbori.pyx',
+    'sage/rings/polynomial/polynomial_gf2x.pyx'
+]
+
 python_packages = find_namespace_packages(where=SAGE_SRC)
 log.warn('python_packages = {0}'.format(python_packages))
-cython_modules = ["src/**/*.pyx"]
+cython_modules = ["**/*.pyx"]
 log.warn('cython_modules = {0}'.format(cython_modules))
 
 include_directories = sage_include_directories(use_sources=True)
+include_directories += ['.']
+# for gmpy2 support
+#include_directories += sys.path
 log.warn('include_directories = {0}'.format(include_directories))
 
 aliases = cython_aliases()
@@ -87,7 +210,7 @@ def my_create_extension(template, kwds):
     # Add numpy and source folder to the include search path used by the compiler
     # This is a workaround for https://github.com/cython/cython/issues/1480
 
-    include_dirs = kwds.get('include_dirs', []) + [numpy.get_include(), 'src', 'src/sage/ext']
+    include_dirs = kwds.get('include_dirs', []) + [numpy.get_include(), 'src', 'src/sage/ext', '.']
     kwds['include_dirs'] = include_dirs
     return default_create_extension(template, kwds)
 
@@ -112,7 +235,6 @@ code = setup(name = 'sage',
       author_email= 'https://groups.google.com/group/sage-support',
       url         = 'https://www.sagemath.org',
       packages    = python_packages,
-      package_dir = {"": "src"},
       package_data = {
           'sage.libs.gap': ['sage.gaprc'],
           'sage.interfaces': ['sage-maxima.lisp'],
