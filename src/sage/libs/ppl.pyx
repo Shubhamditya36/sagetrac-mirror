@@ -1,6 +1,7 @@
-# distutils: sources = src/sage/libs/ppl_shim.cc
+# distutils: sources = sage/libs/ppl_shim.cc
 # distutils: language = c++
 # distutils: libraries = ppl m
+
 r"""
 Cython wrapper for the Parma Polyhedra Library (PPL)
 
