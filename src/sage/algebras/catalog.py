@@ -73,12 +73,12 @@ Let ``<tab>`` indicate pressing the tab key.  So begin by typing
 """
 
 from sage.algebras.free_algebra import FreeAlgebra as Free
-from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra as Quaternion
+#from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra as Quaternion
 from sage.algebras.steenrod.steenrod_algebra import SteenrodAlgebra as Steenrod
 from sage.algebras.finite_dimensional_algebras.finite_dimensional_algebra import FiniteDimensionalAlgebra as FiniteDimensional
 from sage.algebras.group_algebra import GroupAlgebra as Group
-from sage.algebras.clifford_algebra import CliffordAlgebra as Clifford
-from sage.algebras.clifford_algebra import ExteriorAlgebra as Exterior
+#from sage.algebras.clifford_algebra import CliffordAlgebra as Clifford
+#from sage.algebras.clifford_algebra import ExteriorAlgebra as Exterior
 from sage.algebras.weyl_algebra import DifferentialWeylAlgebra as DifferentialWeyl
 from sage.algebras.lie_algebras.lie_algebra import LieAlgebra as Lie
 

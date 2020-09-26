@@ -59,7 +59,7 @@ from .function_field.all import *
 from .finite_rings.residue_field import ResidueField
 
 # p-adic field
-from .padics.all import *
+#from .padics.all import *
 from .padics.padic_printing import _printer_defaults as padic_printing
 
 # valuations
@@ -77,19 +77,19 @@ from .real_double import RealDoubleField, RDF, RealDoubleElement
 
 from .real_lazy import RealLazyField, RLF, ComplexLazyField, CLF
 
-from sage.rings.real_arb import RealBallField, RBF
+#from sage.rings.real_arb import RealBallField, RBF
 
 # Polynomial Rings and Polynomial Quotient Rings
 from .polynomial.all import *
 
 
 # Algebraic numbers
-from .qqbar import (AlgebraicRealField, AA,
-                   AlgebraicReal,
-                   AlgebraicField, QQbar,
-                   AlgebraicNumber,
-                   number_field_elements_from_algebraics)
-from .universal_cyclotomic_field import UniversalCyclotomicField, E
+#from .qqbar import (AlgebraicRealField, AA,
+#                   AlgebraicReal,
+#                   AlgebraicField, QQbar,
+#                   AlgebraicNumber,
+#                   number_field_elements_from_algebraics)
+#from .universal_cyclotomic_field import UniversalCyclotomicField, E
 
 # Intervals
 from .real_mpfi import (RealIntervalField,
@@ -107,7 +107,7 @@ from .complex_double import ComplexDoubleField, ComplexDoubleElement, CDF
 
 from .complex_mpc import MPComplexField
 
-from sage.rings.complex_arb import ComplexBallField, CBF
+#from sage.rings.complex_arb import ComplexBallField, CBF
 
 # Power series rings
 from .power_series_ring import PowerSeriesRing
@@ -124,14 +124,14 @@ lazy_import('sage.rings.lazy_laurent_series_ring', 'LazyLaurentSeriesRing')
 from .tate_algebra import TateAlgebra
 
 # Puiseux series ring
-from .puiseux_series_ring import PuiseuxSeriesRing
-from .puiseux_series_ring_element import PuiseuxSeries
+#from .puiseux_series_ring import PuiseuxSeriesRing
+#from .puiseux_series_ring_element import PuiseuxSeries
 
 # Pseudo-ring of PARI objects.
 from .pari_ring import PariRing, Pari
 
 # Big-oh notation
-from .big_oh import O
+#from .big_oh import O
 
 # Fraction field
 from .fraction_field import FractionField
@@ -163,4 +163,4 @@ from sage.rings.continued_fraction import (continued_fraction,
 from .asymptotic.all import *
 
 # Register classes in numbers abc
-from . import numbers_abc
+#from . import numbers_abc

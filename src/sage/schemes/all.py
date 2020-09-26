@@ -23,19 +23,19 @@ from __future__ import absolute_import
 
 from .jacobians.all import *
 
-from .hyperelliptic_curves.all import *
+#from .hyperelliptic_curves.all import *
 
-from .curves.all import *
+#from .curves.all import *
 
-from .plane_conics.all import *
+#from .plane_conics.all import *
 
-from .elliptic_curves.all import *
+#from .elliptic_curves.all import *
 
-from .plane_quartics.all import *
+#from .plane_quartics.all import *
 
-from .generic.all import *
+#from .generic.all import *
 
-from .toric.all import *
+#from .toric.all import *
 
 from .affine.all import *
 

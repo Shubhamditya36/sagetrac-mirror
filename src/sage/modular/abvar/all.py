@@ -5,4 +5,4 @@ from __future__ import absolute_import
 #                  http://www.gnu.org/licenses/                           #
 ###########################################################################
 
-from .constructor import J0, J1, JH, AbelianVariety
+#from .constructor import J0, J1, JH, AbelianVariety

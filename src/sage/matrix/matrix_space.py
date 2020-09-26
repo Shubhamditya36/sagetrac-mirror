@@ -41,19 +41,17 @@ import operator
 from . import matrix_generic_dense
 from . import matrix_generic_sparse
 
-from . import matrix_modn_sparse
+#from . import matrix_mod2_dense
+#from . import matrix_gf2e_dense
 
-from . import matrix_mod2_dense
-from . import matrix_gf2e_dense
+#from . import matrix_integer_dense
+#from . import matrix_integer_sparse
 
-from . import matrix_integer_dense
-from . import matrix_integer_sparse
-
-from . import matrix_rational_dense
-from . import matrix_rational_sparse
+#from . import matrix_rational_dense
+#from . import matrix_rational_sparse
 
 from . import matrix_polynomial_dense
-from . import matrix_mpolynomial_dense
+#from . import matrix_mpolynomial_dense
 
 # Sage imports
 import sage.structure.coerce
@@ -328,8 +326,10 @@ def get_matrix_class(R, nrows, ncols, sparse, implementation):
     if implementation is not None:
         raise ValueError("can not choose an implementation for sparse matrices")
 
-    if sage.rings.finite_rings.integer_mod_ring.is_IntegerModRing(R) and R.order() < matrix_modn_sparse.MAX_MODULUS:
-        return matrix_modn_sparse.Matrix_modn_sparse
+    if sage.rings.finite_rings.integer_mod_ring.is_IntegerModRing(R):
+        from . import matrix_modn_sparse
+        if R.order() < matrix_modn_sparse.MAX_MODULUS:
+            return matrix_modn_sparse.Matrix_modn_sparse
 
     if sage.rings.rational_field.is_RationalField(R):
         return matrix_rational_sparse.Matrix_rational_sparse
@@ -2351,19 +2351,19 @@ def test_trivial_matrices_inverse(ring, sparse=True, implementation=None, checkr
 
 
 # Fix unpickling Matrix_modn_dense and Matrix_integer_2x2
-from sage.matrix.matrix_modn_dense_double import Matrix_modn_dense_double
-from sage.matrix.matrix_integer_dense import Matrix_integer_dense
+#from sage.matrix.matrix_modn_dense_double import Matrix_modn_dense_double
+#from sage.matrix.matrix_integer_dense import Matrix_integer_dense
 from sage.misc.persist import register_unpickle_override
 def _MatrixSpace_ZZ_2x2():
     from sage.rings.integer_ring import ZZ
     return MatrixSpace(ZZ,2)
-register_unpickle_override('sage.matrix.matrix_modn_dense',
-    'Matrix_modn_dense', Matrix_modn_dense_double)
-register_unpickle_override('sage.matrix.matrix_integer_2x2',
-    'Matrix_integer_2x2', Matrix_integer_dense)
+#register_unpickle_override('sage.matrix.matrix_modn_dense',
+#    'Matrix_modn_dense', Matrix_modn_dense_double)
+#register_unpickle_override('sage.matrix.matrix_integer_2x2',
+#    'Matrix_integer_2x2', Matrix_integer_dense)
 register_unpickle_override('sage.matrix.matrix_integer_2x2',
     'MatrixSpace_ZZ_2x2_class', MatrixSpace)
 register_unpickle_override('sage.matrix.matrix_integer_2x2',
     'MatrixSpace_ZZ_2x2', _MatrixSpace_ZZ_2x2)
-register_unpickle_override('sage.matrix.matrix_mod2e_dense',
-    'unpickle_matrix_mod2e_dense_v0', matrix_gf2e_dense.unpickle_matrix_gf2e_dense_v0)
+#register_unpickle_override('sage.matrix.matrix_mod2e_dense',
+#    'unpickle_matrix_mod2e_dense_v0', matrix_gf2e_dense.unpickle_matrix_gf2e_dense_v0)

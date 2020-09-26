@@ -222,7 +222,7 @@ import sage.rings.complex_interval_field
 from sage.structure.parent_gens import ParentWithGens
 from sage.structure.factory import UniqueFactory
 from . import number_field_element
-from . import number_field_element_quadratic
+#from . import number_field_element_quadratic
 from .number_field_ideal import is_NumberFieldIdeal, NumberFieldFractionalIdeal
 from sage.libs.pari.all import pari, pari_gen
 

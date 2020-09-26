@@ -152,13 +152,13 @@ files_to_exclude += ['sage/libs/giac/giac.pyx']
 # TODO: Fails due to missing homfly lib
 files_to_exclude += ['sage/libs/homfly.pyx']
 
-# TODO: Fails due to problem in cysignals (missing cysigs)
-files_to_exclude += [
-    'sage/rings/padics/padic_capped_absolute_element.pyx',
-    'sage/rings/padics/padic_capped_relative_element.pyx',
-    'sage/rings/padics/padic_fixed_mod_element.pyx',
-    'sage/rings/padics/padic_floating_point_element.pyx'
-]
+# TODO: Fails due to problem in cysignals (missing cysigs), see https://github.com/sagemath/cysignals/issues/111
+#files_to_exclude += [
+#    'sage/rings/padics/padic_capped_absolute_element.pyx',
+#    'sage/rings/padics/padic_capped_relative_element.pyx',
+#    'sage/rings/padics/padic_fixed_mod_element.pyx',
+#    'sage/rings/padics/padic_floating_point_element.pyx'
+#]
 
 # TODO: Fails due to missing CCObject
 files_to_exclude += ['sage/rings/padics/pow_computer_ext.pyx']
