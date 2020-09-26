@@ -1649,16 +1649,17 @@ cdef class LazyAlgebraic(LazyFieldElement):
                 # This could be done much more efficiently with Newton iteration,
                 # but will require some care to make sure we get the right root, and
                 # to the correct precision.
-                from sage.rings.qqbar import AA, QQbar
-                roots = self._poly.roots(ring = AA if isinstance(self._parent, RealLazyField_class) else QQbar)
-                best_root = roots[0][0]
-                min_dist = abs(self._root_approx - best_root)
-                for r, e in roots[1:]:
-                    dist = abs(self._root_approx - r)
-                    if dist < min_dist:
-                        best_root = r
-                        min_dist = dist
-                self._root = best_root
+                # from sage.rings.qqbar import AA, QQbar
+                # roots = self._poly.roots(ring = AA if isinstance(self._parent, RealLazyField_class) else QQbar)
+                # best_root = roots[0][0]
+                # min_dist = abs(self._root_approx - best_root)
+                # for r, e in roots[1:]:
+                #     dist = abs(self._root_approx - r)
+                #     if dist < min_dist:
+                #         best_root = r
+                #         min_dist = dist
+                # self._root = best_root
+                self._root = None
         if self._root is not None:
             return R(self._root)
 

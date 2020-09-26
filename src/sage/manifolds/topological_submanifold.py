@@ -46,7 +46,6 @@ from sage.manifolds.manifold import TopologicalManifold
 from sage.manifolds.continuous_map import ContinuousMap
 from sage.symbolic.expression import Expression
 from sage.symbolic.assumptions import assumptions, assume
-from sage.plot.plot3d.parametric_surface import ParametricSurface
 
 #############################################################################
 # Global options
@@ -681,6 +680,7 @@ class TopologicalSubmanifold(TopologicalManifold):
         fy = expr[1].function(*chart1[:])
         fz = expr[2].function(*chart1[:])
 
+        from sage.plot.plot3d.parametric_surface import ParametricSurface
         return ParametricSurface((fx, fy, fz), (u, v), **kwargs)
 
     def ambient(self):

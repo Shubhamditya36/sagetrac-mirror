@@ -28,9 +28,9 @@ from sage.structure.richcmp import richcmp, richcmp_method
 from sage.interfaces.gap import gap
 from sage.rings.all import Integer
 from sage.rings.all import CyclotomicField
-from sage.libs.gap.element import GapElement
-from sage.libs.gap.libgap import libgap
-from sage.libs.gap.element import GapElement as LibGapElement
+#from sage.libs.gap.element import GapElement
+#from sage.libs.gap.libgap import libgap
+#from sage.libs.gap.element import GapElement as LibGapElement
 
 # TODO:
 #

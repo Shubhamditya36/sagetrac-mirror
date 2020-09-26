@@ -57,15 +57,15 @@ def late_import():
     global CLF, RLF, CDF
     if NumberFieldElement_quadratic is None:
         import sage.rings.number_field.number_field
-        import sage.rings.number_field.number_field_element_quadratic as nfeq
+        #import sage.rings.number_field.number_field_element_quadratic as nfeq
         NumberField_quadratic = sage.rings.number_field.number_field.NumberField_quadratic
-        NumberFieldElement_quadratic = nfeq.NumberFieldElement_quadratic
-        import sage.rings.qqbar
-        AlgebraicNumber_base = sage.rings.qqbar.AlgebraicNumber_base
-        AlgebraicNumber = sage.rings.qqbar.AlgebraicNumber
-        AlgebraicReal = sage.rings.qqbar.AlgebraicReal
-        AA = sage.rings.qqbar.AA
-        QQbar = sage.rings.qqbar.QQbar
+        #NumberFieldElement_quadratic = nfeq.NumberFieldElement_quadratic
+        #import sage.rings.qqbar
+        #AlgebraicNumber_base = sage.rings.qqbar.AlgebraicNumber_base
+        #AlgebraicNumber = sage.rings.qqbar.AlgebraicNumber
+        #AlgebraicReal = sage.rings.qqbar.AlgebraicReal
+        #AA = sage.rings.qqbar.AA
+        #QQbar = sage.rings.qqbar.QQbar
         import sage.symbolic.ring
         SR = sage.symbolic.ring.SR
         from .real_lazy import CLF, RLF

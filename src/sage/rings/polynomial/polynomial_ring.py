@@ -1977,7 +1977,7 @@ class PolynomialRing_field(PolynomialRing_integral_domain,
             sage: x^(10^20) # this should be fast
             x^100000000000000000000
         """
-        import sage.rings.complex_arb
+        #import sage.rings.complex_arb
 
         if not element_class:
             if sparse:

@@ -14,6 +14,9 @@ cypari2 = "*"
 gmpy2 = "==2.1.0b5"
 psutil = "*"
 pexpect = "*"
+ipython = "*"
+sympy = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.8"

@@ -11387,7 +11387,7 @@ class NumberField_quadratic(NumberField_absolute):
                                       embedding=embedding, latex_name=latex_name,
                                       assume_disc_small=assume_disc_small, maximize_at_primes=maximize_at_primes, structure=structure)
         self._standard_embedding = True
-        self._element_class = number_field_element_quadratic.NumberFieldElement_quadratic
+        #self._element_class = number_field_element_quadratic.NumberFieldElement_quadratic
         c, b, a = [QQ(t) for t in self.defining_polynomial().list()]
         # set the generator
         Dpoly = b*b - 4*a*c
@@ -11399,11 +11399,12 @@ class NumberField_quadratic(NumberField_absolute):
         # we must set the flag _standard_embedding *before* any element creation
         # Note that in the following code, no element is built.
         if self.coerce_embedding() is not None and CDF.has_coerce_map_from(self):
-            rootD = CDF(number_field_element_quadratic.NumberFieldElement_quadratic(self, (QQ(0),QQ(1))))
-            if D > 0:
-                self._standard_embedding = rootD.real() > 0
-            else:
-                self._standard_embedding = rootD.imag() > 0
+            #rootD = CDF(number_field_element_quadratic.NumberFieldElement_quadratic(self, (QQ(0),QQ(1))))
+            #if D > 0:
+            #    self._standard_embedding = rootD.real() > 0
+            #else:
+            #    self._standard_embedding = rootD.imag() > 0
+            pass
 
         # we reset _NumberField_generic__gen has the flag standard_embedding
         # might be modified

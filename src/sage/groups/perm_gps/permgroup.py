@@ -145,9 +145,9 @@ from sage.groups.group import FiniteGroup
 from sage.rings.all import QQ, Integer
 from sage.interfaces.expect import is_ExpectElement
 from sage.interfaces.gap import GapElement
-from sage.libs.gap.libgap import libgap
-from sage.libs.gap.element import GapElement as LibGapElement
-from sage.groups.perm_gps.permgroup_element import PermutationGroupElement
+#from sage.libs.gap.libgap import libgap
+#from sage.libs.gap.element import GapElement as LibGapElement
+#from sage.groups.perm_gps.permgroup_element import PermutationGroupElement
 from sage.groups.perm_gps.constructor import PermutationGroupElement as PermutationConstructor, standardize_generator
 from sage.groups.abelian_gps.abelian_group import AbelianGroup
 from sage.misc.cachefunc import cached_method
@@ -721,7 +721,7 @@ class PermutationGroup_generic(FiniteGroup):
 
         return gSelf._richcmp_(gRight, op)
 
-    Element = PermutationGroupElement
+    #Element = PermutationGroupElement
 
     def _element_constructor_(self, x, check=True):
         """
