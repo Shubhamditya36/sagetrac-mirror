@@ -58,7 +58,7 @@ t = time.time()
 
 # Exclude a few files if the corresponding distribution is not loaded
 from sage_setup.optional_extension import is_package_installed_and_updated
-from sage_setup.find import find_sources_by_distribution
+from sage_setup.find import filter_cython_sources
 
 optional_packages = ['mcqd', 'bliss', 'tdlib', 'primecount',
                      'coxeter3', 'fes', 'sirocco', 'meataxe']
@@ -67,7 +67,7 @@ not_installed_packages = [package for package in optional_packages
 
 distributions_to_exclude = ['sage-{}'.format(pkg)
                             for pkg in not_installed_packages]
-files_to_exclude = find_sources_by_distribution(SAGE_SRC, distributions_to_exclude)
+files_to_exclude = filter_cython_sources(SAGE_SRC, distributions_to_exclude)
 
 log.warn('files_to_exclude = {0}'.format(files_to_exclude))
 

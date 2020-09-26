@@ -58,8 +58,7 @@ def read_distribution(src_file):
                     return value
     return ''
 
-
-def find_sources_by_distribution(src_dir, distributions):
+def find_python_sources(src_dir, modules=['sage'], distributions=None):
     """
     Find all Python packages and Python/Cython modules in the sources.
 
@@ -130,6 +129,86 @@ def find_sources_by_distribution(src_dir, distributions):
 
         sage: find_python_sources(SAGE_SRC, modules=['sage_setup'])
         (['sage_setup', ...], [...'sage_setup.find'...], [])
+    """
+    from distutils.extension import Extension
+
+    PYMOD_EXT = get_extensions('source')[0]
+    INIT_FILE = '__init__' + PYMOD_EXT
+
+    python_packages = []
+    python_modules = []
+    cython_modules = []
+
+    cwd = os.getcwd()
+    try:
+        os.chdir(src_dir)
+        for module in modules:
+            for dirpath, dirnames, filenames in os.walk(module):
+                package = dirpath.replace(os.path.sep, '.')
+                if INIT_FILE in filenames:
+                    # Ordinary package.
+                    if distributions is None or '' in distributions:
+                        python_packages.append(package)
+                else:
+                    continue
+
+                def is_in_distributions(filename):
+                    if distributions is None:
+                        return True
+                    distribution = read_distribution(os.path.join(dirpath, filename))
+                    return distribution in distributions
+
+                for filename in filenames:
+                    base, ext = os.path.splitext(filename)
+                    if ext == PYMOD_EXT and base != '__init__':
+                        if is_in_distributions(filename):
+                            python_modules.append(package + '.' + base)
+                    if ext == '.pyx':
+                        if is_in_distributions(filename):
+                            cython_modules.append(Extension(package + '.' + base,
+                                                            sources=[os.path.join(dirpath, filename)]))
+
+    finally:
+        os.chdir(cwd)
+    return python_packages, python_modules, cython_modules
+
+def filter_cython_sources(src_dir, distributions):
+    """
+    Find all Cython modules in the given source directory that belong to the
+    given distributions.
+
+    INPUT:
+
+    - ``src_dir`` -- root directory for the sources
+
+    - ``distributions`` -- a sequence or set of strings: only find modules whose
+      ``distribution`` (from a ``# sage_setup: distribution = PACKAGE``
+      directive in the module source file) is an element of
+      ``distributions``.
+
+    OUTPUT: List of absolute paths to Cython files (``*.pyx``).
+
+    EXAMPLES::
+
+        sage: from sage.env import SAGE_SRC
+        sage: from sage_setup.find import find_cython_sources
+        sage: cython_modules = find_cython_sources(SAGE_SRC, ["sage-tdlib"])
+        
+    Cython module relying on tdlib::
+
+        sage: 'sage/graphs/graph_decompositions/tdlib.pyx' in cython_modules
+        True
+
+    Cython module not relying on tdlib::
+
+        sage: 'sage/structure/sage_object.pyx' in cython_modules
+        False
+
+    Benchmarking::
+
+        sage: timeit('find_cython_sources(SAGE_SRC, ["sage-tdlib"])', # random output
+        ....:        number=1, repeat=1)
+        1 loops, best of 1: 850 ms per loop
     """
     files = []
 
