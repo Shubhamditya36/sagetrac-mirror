@@ -160,9 +160,6 @@ files_to_exclude += ['sage/libs/homfly.pyx']
 #    'sage/rings/padics/padic_floating_point_element.pyx'
 #]
 
-# TODO: Fails due to missing CCObject
-files_to_exclude += ['sage/rings/padics/pow_computer_ext.pyx']
-
 # TODO: Fails due to missing linbox lib
 files_to_exclude += [
     'sage/libs/linbox/linbox_flint_interface.pyx',
