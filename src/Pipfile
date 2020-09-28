@@ -7,6 +7,8 @@ verify_ssl = true
 pkgconfig = "*"
 cython = "*"
 pycodestyle = "*"
+ipykernel = "*"
+tox = "*"
 
 [packages]
 numpy = "*"
