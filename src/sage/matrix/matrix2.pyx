@@ -99,7 +99,6 @@ from sage.matrix.matrix_misc import permanental_minor_polynomial
 from sage.misc.superseded import deprecated_function_alias
 
 _Fields = Fields()
-_IntegralDomains = IntegralDomains()
 
 cdef class Matrix(Matrix1):
     """
@@ -2170,11 +2169,23 @@ cdef class Matrix(Matrix1):
         If the matrix is small, namely up to size `4 \times 4`, the naive
         formulas are used.
 
-        For integral domains with characteristic zero,
-        the Bär-Faddeev-LeVerrier algorithm is used (see [Baer2020]_). The
-        algorithm is based on the Faddeev-LeVerrier algorithm for the
-        determinant. If the base ring is no field, the computation is performed
-        in its fraction field.
+        For rings with characteristic zero, the Bär-Faddeev-LeVerrier
+        algorithm is tried first. If that fails, the definition by perfect
+        matchings is used. The BFL algorithm is based on the
+        Faddeev-LeVerrier algorithm for the determinant (see [Baer2020]_ for
+        details).
+
+        .. WARNING::
+
+            The Bär-Faddeev-LeVerrier algorithm involves division by
+            integers. This works perfectly fine if the ring is an
+            `\QQ`-algebra, but should also work in any ring without torsion.
+            The implementation therefore tries to coerce the matrix entries
+            in a proper ring where this computation is possible (perhaps its
+            fraction field) and tries to convert the result back to the
+            original ring. If that fails, the definition by perfect matchings is
+            used instead. If you expect wrong results due to that,
+            use ``algorithm='definition'`` right away.
 
         For any other cases, the implementation uses the definition given above.
 
@@ -2255,7 +2266,7 @@ cdef class Matrix(Matrix1):
             Traceback (most recent call last):
             ...
             TypeError: Bär-Faddeev-LeVerrier algorithm only applicable to
-             matrices over integral domains with characteristic zero
+             matrices over rings with characteristic zero
 
         In that case, the definition by perfect matchings is used instead::
 
@@ -2296,32 +2307,27 @@ cdef class Matrix(Matrix1):
         # get ring characteristic:
         try:
             ch = R.characteristic()
-        except AttributeError():
+        except (AttributeError, NotImplementedError):
             ch = None
 
         # choose algorithm:
         if algorithm is None:
-            if R not in _IntegralDomains or ch != 0:
-                pf = self._pf_perfect_matchings()
+            if ch == 0:
+                try:
+                    pf = self._coerce_element((<Matrix> self)._pf_bfl())
+                except TypeError:
+                    pf = self._pf_perfect_matchings()
             else:
-                if R in _Fields:
-                    pf = self._pf_bfl()
-                else:
-                    F = R.fraction_field()
-                    pf = self._coerce_element(self.change_ring(F)._pf_bfl())
+                pf = self._pf_perfect_matchings()
         else:
             if algorithm == 'definition':
                 pf = self._pf_perfect_matchings()
             elif algorithm == 'bfl':
-                if R not in _IntegralDomains or ch !=0:
+                if ch != 0:
                     raise TypeError('Bär-Faddeev-LeVerrier algorithm only '
-                                    'applicable to matrices over integral '
-                                    'domains with characteristic zero')
-                if R in _Fields:
-                    pf = self._pf_bfl()
-                else:
-                    F = R.fraction_field()
-                    pf = self._coerce_element(self.change_ring(F)._pf_bfl())
+                                    'applicable to matrices over rings '
+                                    'with characteristic zero')
+                pf = self._coerce_element((<Matrix> self)._pf_bfl())
             else:
                 raise NotImplementedError("algorithm '%s' not recognized" % algorithm)
         # cache the result, and return it:
@@ -2371,15 +2377,16 @@ cdef class Matrix(Matrix1):
 
         return res
 
-    def _pf_bfl(self):
+    cdef _pf_bfl(self):
         r"""
         Computes the Pfaffian of ``self`` using the Baer-Faddeev-LeVerrier
-        algorithm. This method assumes that the base ring is a field
-        with characteristic zero.
+        algorithm. This method assumes that the base ring has characteristic 
+        zero.
 
         OUTPUT:
 
-        - an element of the base ring of ``self`` representing the Pfaffian
+        - an element (possibly coerced) originated from the base ring of 
+          ``self`` representing the Pfaffian
 
         EXAMPLES:
 
@@ -2392,36 +2399,37 @@ cdef class Matrix(Matrix1):
             ....:             (2, -1, 0, 0, 1, 5/2),
             ....:             (-2, 1, -3/2, -1, 0, 1/2),
             ....:             (1/2, -3/2, -1, -5/2, -1/2, 0)])
-            sage: A._pf_bfl()
+            sage: A.pfaffian(algorithm='bfl')
             -1/2
 
         The result always coincides with the definition by perfect matchings::
 
             sage: A = random_matrix(QQ, 6)
             sage: A = A - A.transpose()
-            sage: A._pf_bfl() == A._pf_perfect_matchings()
+            sage: A.pfaffian(algorithm='bfl') == A.pfaffian(algorithm='definition')
             True
 
         """
-        n = self._ncols
-        q = n // 2
+        cdef Py_ssize_t n = self._ncols
+        cdef Py_ssize_t q = n // 2
+        cdef Py_ssize_t i, k
 
         # apply J:
         cdef Matrix A = <Matrix> copy(self)
-        for i in xrange(0, n, 2):
-            A.swap_columns(i, i+1)
-            A.set_col_to_multiple_of_col(i+1, i+1, -1)
+        for i in range(0, n, 2):
+            A.swap_columns_c(i, i+1)  # avoid checks
+            for k in range(n):
+                A.set_unsafe(k, i+1, -A.get_unsafe(k, i+1))
 
-        from sage.matrix.constructor import matrix
-
-        cdef Matrix id = <Matrix> matrix.identity(n)
-        cdef Matrix M = <Matrix> A
+        cdef Matrix M = <Matrix> copy(A)
 
         # Baer-Faddeev-Leverrier algorithm:
-        for k in xrange(1, q):
-            c = -M.trace() / (2*k)
-            N = M + c*id
-            M = A * N
+        for k in range(1, q):
+            c = -M.trace() / (2*k)  # possibly coerce to the fraction field
+            # add c along the diagonal
+            for i in range(n):
+                M.set_unsafe(i ,i, M.get_unsafe(i, i) + c)
+            M = A * M
         c = -M.trace() / (2*q)
         return (-1)**q * c
 
